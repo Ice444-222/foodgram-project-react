@@ -1,5 +1,4 @@
-#foodgram
-version: '3.3'
+version: '3'
 
 volumes:
   pg_data:
@@ -13,7 +12,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   backend:
-    image: ice444222/foodgram_backend
+    image: ice444222/kittygram_backend
     env_file: .env
     volumes:
       - static:/backend_static
@@ -21,16 +20,16 @@ services:
     depends_on:
       - db
   frontend:
-    image: ice444222/foodgram_frontend
+    image: ice444222/kittygram_frontend
     env_file: .env
     command: cp -r /app/build/. /static/
     volumes:
       - static:/static
-  nginx:
-    image: nginx:1.19.3
+  gateway:
+    image: ice444222/kittygram_gateway
+    env_file: .env
     ports:
-      - "8000:80"
+      - 9000:80
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
+      - static:/static
+      - media:/media
