@@ -10,12 +10,12 @@ from rest_framework import status
 from rest_framework.response import Response
 import base64
 from django.core.files.base import ContentFile
-from drf_writable_nested import WritableNestedModelSerializer
 from django.db.models import F
 
 from recipes.models import Tag, Recipe, RecipesIngredients, Ingredient, RecipesIngredients
 
 User = get_user_model()
+
 
 class UserBasicSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
@@ -70,12 +70,13 @@ class UserNewPasswordSerializer(serializers.Serializer):
         current_password = attrs.get('current_password')
         new_password = attrs.get('new_password')
         user = self.context['request'].user
-        if current_password!=user.password:
+        if current_password != user.password:
             raise serializers.ValidationError('Incorrect current password.')
         user.password = new_password
         user.save(update_fields=['password'])
 
         return attrs
+
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
@@ -84,7 +85,6 @@ class Base64ImageField(serializers.ImageField):
             ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
         return super().to_internal_value(data)
-
 
 
 class CustomTokenObtainPairSerializer(serializers.Serializer):
@@ -107,11 +107,13 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         attrs["user"] = user
         return attrs
 
+
 class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
         fields = ["id", "name", "color", "slug"]
+
 
 class RecipesIngredientsSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
@@ -123,17 +125,20 @@ class RecipesIngredientsSerializer(serializers.ModelSerializer):
         model = RecipesIngredients
         fields = ("id", "name", "measurement_unit", "amount")
 
+
 class RecipesSerializer(serializers.ModelSerializer):
     author = UserBasicSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    ingredients =  serializers.SerializerMethodField()
+    ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(read_only=True, many=True)
     image = Base64ImageField()
 
     class Meta:
         model = Recipe
-        fields = ["id", "tags", "author", "ingredients", "is_favorited", "is_in_shopping_cart", "name", "image", "text", "cooking_time"]
+        fields = ["id", "tags", "author", "ingredients",
+                  "is_favorited", "is_in_shopping_cart",
+                  "name", "image", "text", "cooking_time"]
 
         extra_kwargs = {
             'image': {'required': True}
@@ -193,7 +198,9 @@ class RecipesSerializer(serializers.ModelSerializer):
         for ingredient in ingredients:
 
             if ingredient['id'] in diblicate_ingredients:
-                raise serializers.ValidationError(f'У ингредиента с id {ingredient["id"]} есть дубликат.')
+                raise serializers.ValidationError(
+                    f'У ингредиента с id {ingredient["id"]} есть дубликат.'
+                )
             diblicate_ingredients.append(ingredient['id'])
 
             if int(ingredient['amount']) < 1:

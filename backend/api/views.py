@@ -140,28 +140,40 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSubscriptionsSerializer(user_subscriptions_paginated,context={'request': request}, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    @action(detail=True, methods=['POST','DELETE'], permission_classes=(IsAuthenticated,))
+    @action(
+            detail=True, methods=['POST','DELETE'],
+            permission_classes=(IsAuthenticated,)
+        )
     def subscribe(self, request, pk=None):
         user = request.user
         subscription = self.get_object()
-        user_subscriptions = Subscription.objects.filter(user=user, subscription=subscription)
+        user_subscriptions = Subscription.objects.filter(
+            user=user, subscription=subscription
+        )
         if request.method == 'POST':
             if user == subscription:
-                return Response({"detail": 'Вы не можете подписаться на самого себя.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": 'Вы не можете подписаться на самого себя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             if user_subscriptions.exists():
-                return Response({"detail": 'Вы уже подписаны на данного пользователя'}, status=status.HTTP_400_BAD_REQUEST)
-            Subscription.objects.create(user=request.user, subscription=subscription)
-            serializer = UserSubscriptionsSerializer(subscription,context={'request': request},)
+                return Response(
+                    {"detail": 'Вы уже подписаны на данного пользователя'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            Subscription.objects.create(
+                user=request.user, subscription=subscription
+            )
+            serializer = UserSubscriptionsSerializer(
+                subscription,
+                context={'request': request},
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
             if user_subscriptions.exists():
                 user_subscriptions.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({"detail": 'Вы не подписанына этого пользователя'}, status=status.HTTP_400_BAD_REQUEST)  
-
-
-
-
+            return Response({"detail": 'Вы не подписанына этого пользователя'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserAdminCreateDeleteView(viewsets.ModelViewSet):
@@ -290,11 +302,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 raise ParseError(detail=f"Данный рецепт не существует")
             raise Http404
 
-
         favorites_user = user.favorites.filter(pk=recipe.pk)
         if request.method == 'POST':
             if favorites_user.exists():
-                return Response({"detail": 'У вас уже есть этот рецепт в избранном'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": 'У вас уже есть этот рецепт в избранном'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             user.favorites.add(recipe)
             serializer = RecipeBriefSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -303,7 +317,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 user.favorites.remove(recipe)
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(
-                {"detail": 'У вас нету этого рецепта в избранном'}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": 'У вас нету этого рецепта в избранном'},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
 
