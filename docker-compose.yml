@@ -23,8 +23,9 @@ services:
   frontend:
     image: ice444222/foodgram_frontend
     env_file: .env
+    command: cp -r /app/build/. /static/
     volumes:
-      - ./frontend/:/app/result_build/
+      - static:/static
 
 
   nginx:
@@ -34,7 +35,6 @@ services:
     ports:
       - 8000:80
     volumes:
-      - ./frontend/build:/usr/share/nginx/html/
       - ./docs/:/usr/share/nginx/html/api/docs/
-      - media:/var/html/media/
-      - static:/static/
+      - media:/media
+      - static:/static
