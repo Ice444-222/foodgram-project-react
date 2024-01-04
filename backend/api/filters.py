@@ -1,4 +1,4 @@
-from django_filters.rest_framework import CharFilter, FilterSet, ModelChoiceFilter, BooleanFilter, LookupChoiceFilter
+from django_filters.rest_framework import CharFilter, FilterSet, ModelChoiceFilter, BooleanFilter, LookupChoiceFilter, MultipleChoiceFilter
 from django.db.models import F, Exists, OuterRef
 from recipes.models import Ingredient, Recipe
 
@@ -20,7 +20,7 @@ class IngredientFilter(FilterSet):
 
 class RecipeFilter(FilterSet):
     author = CharFilter(field_name='author__id', lookup_expr='iexact')
-    tags = LookupChoiceFilter(
+    tags = MultipleChoiceFilter(
         field_name='tags__slug',
         lookup_expr='iexact',
         conjoined=True
@@ -32,6 +32,10 @@ class RecipeFilter(FilterSet):
     class Meta:
         model = Recipe
         fields = ('author','tags__slug', 'is_favorited', 'is_in_shopping_cart')
+
+
+    def filter_tags(self, queryset, name, value):
+        return queryset.filter(tags__slug__in=value)
 
     def filter_is_favorited(self, queryset, name, value):
         if value:
