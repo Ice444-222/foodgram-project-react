@@ -1,6 +1,6 @@
-from django_filters.rest_framework import CharFilter, FilterSet, ModelChoiceFilter, BooleanFilter, LookupChoiceFilter, MultipleChoiceFilter
+from django_filters.rest_framework import CharFilter, FilterSet, ModelChoiceFilter, BooleanFilter, LookupChoiceFilter, ModelMultipleChoiceFilter
 from django.db.models import F, Exists, OuterRef
-from recipes.models import Ingredient, Recipe
+from recipes.models import Ingredient, Recipe, Tag
 
 
 
@@ -20,10 +20,10 @@ class IngredientFilter(FilterSet):
 
 class RecipeFilter(FilterSet):
     author = CharFilter(field_name='author__id', lookup_expr='iexact')
-    tags = MultipleChoiceFilter(
+    tags = ModelMultipleChoiceFilter(
         field_name='tags__slug',
-        lookup_expr='iexact',
-        conjoined=True
+        queryset=Tag.objects.all(),
+        lookup_expr='iexact'
     )
     is_favorited = BooleanFilter(method='filter_is_favorited')
     is_in_shopping_cart = BooleanFilter(
