@@ -198,7 +198,7 @@ class TagViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (SafeMethodOrAuthor|IsAdminOrReadOnly,)
     queryset = Recipe.objects.all()
     serializer_class = RecipesSerializer
     pagination_class = UserPageNumberPagination
