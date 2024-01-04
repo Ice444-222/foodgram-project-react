@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import render
 from django.http import Http404
 from rest_framework.exceptions import ParseError, NotFound
-
+import os
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions, status, viewsets
@@ -271,7 +271,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             for ingredient, amount in shopping_list.items():
                 file.write(f"{ingredient} — {amount}\n")
             file.write(f"\n\n\nСформировано на сайте http://127.0.0.1:8000, Foodgram project")
-        response = HttpResponse("Список покупок готов")
+        with open(filename, 'r', encoding='utf-8') as file:
+            file_content = file.read()
+        response = HttpResponse(file_content, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filename)}"'
         return response
     
     @action(
