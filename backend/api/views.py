@@ -15,8 +15,6 @@ from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
-from django.contrib.auth.hashers import check_password
-from django.shortcuts import get_object_or_404
 from datetime import datetime
 from django.http import HttpResponse
 from .filters import IngredientFilter, RecipeFilter
@@ -59,7 +57,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return UserCreateSerializer
         return UserBasicSerializer
-    
+
     def perform_create(self, serializer):
         user = serializer.save()
         user.save()
@@ -95,7 +93,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @action(
             detail=False, methods=['POST'], permission_classes=(IsAuthenticated,)
         )
@@ -106,7 +104,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
     @action(
             detail=True, methods=['PUT'], permission_classes=(permissions.IsAdminUser,)
         )
@@ -132,16 +130,16 @@ class UserViewSet(viewsets.ModelViewSet):
         user.is_active = False
         user.save()
         return Response({"detail": "User blocked successfully."}, status=status.HTTP_200_OK)
-    
+
     @action(detail=False, methods=['GET'], permission_classes=(IsAuthenticated,))
     def subscriptions(self, request, *args, **kwargs):
         user = request.user
         user_subscriptions = User.objects.filter(subscribers__user=user)
         paginator = self.pagination_class()
         user_subscriptions_paginated = paginator.paginate_queryset(user_subscriptions, request)
-        serializer = UserSubscriptionsSerializer(user_subscriptions_paginated,context={'request': request},many=True)
+        serializer = UserSubscriptionsSerializer(user_subscriptions_paginated,context={'request': request}, many=True)
         return paginator.get_paginated_response(serializer.data)
-    
+
     @action(detail=True, methods=['POST','DELETE'], permission_classes=(IsAuthenticated,))
     def subscribe(self, request, pk=None):
         user = request.user
@@ -160,7 +158,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 user_subscriptions.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response({"detail": 'Вы не подписанына этого пользователя'}, status=status.HTTP_400_BAD_REQUEST)  
-        
+
 
 
 
@@ -185,12 +183,12 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             "auth_token": str(access_token),
         }
         return Response(response_data, status=status.HTTP_200_OK)
-    
+
 class TokenLogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
- 
+
         try:
             access_token = request.auth
             refresh_token = request.data.get('refresh_token')
@@ -215,7 +213,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = UserPageNumberPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = RecipeFilter
-    @action(detail=True, methods=['POST','DELETE'], permission_classes=(IsAuthenticated,))
+    
+    @action(
+            detail=True, methods=['POST', 'DELETE'], permission_classes=(IsAuthenticated,)
+        )
     def shopping_cart(self, request, pk=None):
         try:
             recipe = self.get_object()
@@ -228,7 +229,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         groceries_relation = user.groceries_list.filter(pk=recipe.pk)
         if request.method == 'POST':
             if groceries_relation.exists():
-                return Response({"detail": 'У вас уже есть этот рецепт в корзине'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": 'У вас уже есть этот рецепт в корзине'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             user.groceries_list.add(recipe)
             serializer = RecipeBriefSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -236,8 +240,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             if groceries_relation.exists():
                 user.groceries_list.remove(recipe)
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({"detail": 'У вас нету этого рецепта в корзине'}, status=status.HTTP_400_BAD_REQUEST)
-    @action(detail=False, methods=['GET'], permission_classes=(IsAuthenticated,))
+            return Response(
+                {"detail": 'У вас нету этого рецепта в корзине'}, status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    @action(
+            detail=False, methods=['GET'],
+            permission_classes=(IsAuthenticated,)
+        )
     def download_shopping_cart(self, request, *args, **kwargs):
         user = request.user
         shopping_cart = user.groceries_list.all()
@@ -263,7 +273,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             file.write(f"\n\n\nСформировано на сайте http://127.0.0.1:8000, Foodgram project")
         response = HttpResponse("Список покупок готов")
         return response
-    @action(detail=True, methods=['POST','DELETE'], permission_classes=(IsAuthenticated,))
+    
+    @action(
+            detail=True, methods=['POST', 'DELETE'],
+            permission_classes=(IsAuthenticated,)
+        )
     def favorite(self, request, pk=None):
         user = request.user
         try:
@@ -285,14 +299,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             if favorites_user.exists():
                 user.favorites.remove(recipe)
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({"detail": 'У вас нету этого рецепта в избранном'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": 'У вас нету этого рецепта в избранном'}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
-
-
-
-
-    
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
