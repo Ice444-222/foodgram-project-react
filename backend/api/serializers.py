@@ -201,7 +201,7 @@ class RecipesSerializer(serializers.ModelSerializer):
             diblicate_ingredients.append(ingredient['id'])
             
 
-            if ingredient['amount'] < 1:
+            if int(ingredient['amount']) < 1:
                 raise serializers.ValidationError(
                     'Количество условных единиц ингредиенов не может быть меньше 1.')
             try:
