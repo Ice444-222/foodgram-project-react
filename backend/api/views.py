@@ -39,19 +39,21 @@ from .serializers import (
 )
 from users.models import User, Subscription
 
+
 class RecipePageNumberPagination(PageNumberPagination):
     page_size_query_param = 'recipe_limit'
     page_size_query_param = 'limit'
 
+
 class UserPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'limit'
+
 
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.AllowAny,)
     queryset = User.objects.all()
     http_method_names = ['get', 'post', 'put', 'delete']
     pagination_class = UserPageNumberPagination
-
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -85,7 +87,8 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def me(self, request, *args, **kwargs):
         user = request.user
-        serializer = UserBasicSerializer(user,
+        serializer = UserBasicSerializer(
+            user,
             data=request.data, partial=True, context={'request': request}
         )
         if serializer.is_valid():
@@ -93,14 +96,20 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=False, methods=['POST'], permission_classes=(IsAuthenticated,))
+    @action(
+            detail=False, methods=['POST'], permission_classes=(IsAuthenticated,)
+        )
     def set_password(self, request, *args, **kwargs):
-        serializer = UserNewPasswordSerializer(data=request.data, context={'request': request})
+        serializer = UserNewPasswordSerializer(
+            data=request.data, context={'request': request}
+        )
         serializer.is_valid(raise_exception=True)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-    @action(detail=True, methods=['PUT'], permission_classes=(permissions.IsAdminUser,))
+    @action(
+            detail=True, methods=['PUT'], permission_classes=(permissions.IsAdminUser,)
+        )
     def edit_user(self, request, pk=None):
         user = self.get_object()
         serializer = UserBasicSerializer(user, data=request.data, partial=True)
@@ -109,7 +118,9 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['DELETE'], permission_classes=(permissions.IsAdminUser,))
+    @action(
+            detail=True, methods=['DELETE'], permission_classes=(permissions.IsAdminUser,)
+        )
     def delete_user(self, request, pk=None):
         user = self.get_object()
         user.delete()
