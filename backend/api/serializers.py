@@ -85,8 +85,6 @@ class Base64ImageField(serializers.ImageField):
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
         return super().to_internal_value(data)
 
-    def to_representation(self, file):
-        return '/media/' + super().to_representation(file)
 
 
 class CustomTokenObtainPairSerializer(serializers.Serializer):
