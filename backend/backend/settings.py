@@ -13,7 +13,7 @@ SECRET_KEY = 'django-insecure-1=1rs6)+)#dm&k7xj7d#*agkdi5sits)7hb_4wccu$+j661jig
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '158.160.17.244', 'iceadmin.ru']
+ALLOWED_HOSTS = ['158.160.17.244', 'iceadmin.ru']
 
 
 # Application definition
