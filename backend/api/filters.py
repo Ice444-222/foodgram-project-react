@@ -22,8 +22,8 @@ class RecipeFilter(FilterSet):
     author = CharFilter(field_name='author__id', lookup_expr='iexact')
     tags = ModelMultipleChoiceFilter(
         field_name='tags__slug',
+        to_field_name='slug',
         queryset=Tag.objects.all(),
-        lookup_expr='iexact'
     )
     is_favorited = BooleanFilter(method='filter_is_favorited')
     is_in_shopping_cart = BooleanFilter(
