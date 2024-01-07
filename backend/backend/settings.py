@@ -1,8 +1,9 @@
 # flake8: noqa
 import os
-from dotenv import load_dotenv, find_dotenv
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
+
+from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 

@@ -1,41 +1,28 @@
-from django.contrib.auth import get_user_model
-from django.shortcuts import render
-from django.http import Http404
-from rest_framework.exceptions import ParseError, NotFound
 import os
-
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, permissions, status, viewsets
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from datetime import datetime
-from django.http import HttpResponse
-from .filters import IngredientFilter, RecipeFilter
 
-from .permissions import (
-    IsAdminOrReadOnly,
-    SafeMethodOrAuthor,
-)
-from recipes.models import Tag, Recipe, Ingredient, RecipesIngredients
-from .serializers import (
-    UserBasicSerializer,
-    UserCreateSerializer,
-    UserNewPasswordSerializer,
-    CustomTokenObtainPairSerializer,
-    TagSerializer,
-    RecipesSerializer,
-    IngredientSerializer,
-    RecipeBriefSerializer,
-    UserSubscriptionsSerializer
-)
-from users.models import User, Subscription
+from django.http import Http404, HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import ParseError
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from recipes.models import Ingredient, Recipe, RecipesIngredients, Tag
+from users.models import Subscription, User
+
+from .filters import IngredientFilter, RecipeFilter
+from .permissions import IsAdminOrReadOnly, SafeMethodOrAuthor
+from .serializers import (IngredientSerializer, RecipeBriefSerializer,
+                          RecipesSerializer, TagSerializer,
+                          UserBasicSerializer, UserCreateSerializer,
+                          UserNewPasswordSerializer,
+                          UserSubscriptionsSerializer)
 
 
 class RecipePageNumberPagination(PageNumberPagination):
@@ -95,7 +82,8 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-            detail=False, methods=['POST'], permission_classes=(IsAuthenticated,)
+            detail=False, methods=['POST'],
+            permission_classes=(IsAuthenticated,)
         )
     def set_password(self, request, *args, **kwargs):
         serializer = UserNewPasswordSerializer(
@@ -106,7 +94,8 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-            detail=True, methods=['PUT'], permission_classes=(permissions.IsAdminUser,)
+            detail=True, methods=['PUT'],
+            permission_classes=(permissions.IsAdminUser,)
         )
     def edit_user(self, request, pk=None):
         user = self.get_object()
@@ -117,31 +106,48 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-            detail=True, methods=['DELETE'], permission_classes=(permissions.IsAdminUser,)
+            detail=True, methods=['DELETE'],
+            permission_classes=(permissions.IsAdminUser,)
         )
     def delete_user(self, request, pk=None):
         user = self.get_object()
         user.delete()
-        return Response({"detail": "User deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"detail": "User deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
-    @action(detail=True, methods=['POST'], permission_classes=(permissions.IsAdminUser,))
+    @action(
+            detail=True, methods=['POST'],
+            permission_classes=(permissions.IsAdminUser,)
+        )
     def block_user(self, request, pk=None):
         user = self.get_object()
         user.is_active = False
         user.save()
-        return Response({"detail": "User blocked successfully."}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "User blocked successfully."}, status=status.HTTP_200_OK
+        )
 
-    @action(detail=False, methods=['GET'], permission_classes=(IsAuthenticated,))
+    @action(
+            detail=False, methods=['GET'],
+            permission_classes=(IsAuthenticated,)
+        )
     def subscriptions(self, request, *args, **kwargs):
         user = request.user
         user_subscriptions = User.objects.filter(subscribers__user=user)
         paginator = self.pagination_class()
-        user_subscriptions_paginated = paginator.paginate_queryset(user_subscriptions, request)
-        serializer = UserSubscriptionsSerializer(user_subscriptions_paginated,context={'request': request}, many=True)
+        user_subscriptions_paginated = paginator.paginate_queryset(
+            user_subscriptions, request
+        )
+        serializer = UserSubscriptionsSerializer(
+            user_subscriptions_paginated, context={'request': request},
+            many=True
+        )
         return paginator.get_paginated_response(serializer.data)
 
     @action(
-            detail=True, methods=['POST','DELETE'],
+            detail=True, methods=['POST', 'DELETE'],
             permission_classes=(IsAuthenticated,)
         )
     def subscribe(self, request, pk=None):
@@ -173,7 +179,10 @@ class UserViewSet(viewsets.ModelViewSet):
             if user_subscriptions.exists():
                 user_subscriptions.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({"detail": 'Вы не подписанына этого пользователя'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": 'Вы не подписанына этого пользователя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class UserAdminCreateDeleteView(viewsets.ModelViewSet):
@@ -182,19 +191,6 @@ class UserAdminCreateDeleteView(viewsets.ModelViewSet):
     serializer_class = UserCreateSerializer
     http_method_names = ['get', 'post']
 
-class CustomTokenObtainPairView(TokenObtainPairView):
-    permission_classes = (permissions.AllowAny,)
-    serializer_class = CustomTokenObtainPairSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data.get("user")
-        access_token = AccessToken.for_user(user)
-        response_data = {
-            "auth_token": str(access_token),
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
 
 class TokenLogoutView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -209,32 +205,38 @@ class TokenLogoutView(APIView):
             if refresh_token:
                 RefreshToken(refresh_token).blacklist()
         except Exception as e:
-            return Response({'detail': 'Учетные данные не были предоставлены.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {'detail': 'Учетные данные не были предоставлены.'},
+                status=status.HTTP_401_UNAUTHORIZED
+                )
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
+
 class TagViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
 
+
 class RecipeViewSet(viewsets.ModelViewSet):
-    permission_classes = (SafeMethodOrAuthor|IsAdminOrReadOnly,)
+    permission_classes = (SafeMethodOrAuthor | IsAdminOrReadOnly,)
     queryset = Recipe.objects.all()
     serializer_class = RecipesSerializer
     pagination_class = UserPageNumberPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = RecipeFilter
-    
+
     @action(
-            detail=True, methods=['POST', 'DELETE'], permission_classes=(IsAuthenticated,)
+            detail=True, methods=['POST', 'DELETE'],
+            permission_classes=(IsAuthenticated,)
         )
     def shopping_cart(self, request, pk=None):
         try:
             recipe = self.get_object()
         except Http404:
             if request.method == 'POST':
-                raise ParseError(detail=f"Данный рецепт не существует")
+                raise ParseError(detail="Данный рецепт не существует")
             raise Http404
 
         user = request.user
@@ -253,9 +255,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 user.groceries_list.remove(recipe)
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(
-                {"detail": 'У вас нету этого рецепта в корзине'}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": 'У вас нету этого рецепта в корзине'},
+                status=status.HTTP_400_BAD_REQUEST
             )
-    
+
     @action(
             detail=False, methods=['GET'],
             permission_classes=(IsAuthenticated,)
@@ -264,7 +267,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         shopping_cart = user.groceries_list.all()
         recipe_ids = shopping_cart.values_list('pk')
-        recipes_ingredients = RecipesIngredients.objects.filter(recipe__in=recipe_ids)
+        recipes_ingredients = RecipesIngredients.objects.filter(
+            recipe__in=recipe_ids
+        )
         current_date = datetime.now().strftime("%Y-%m-%d")
         filename = f"{user.username}_shopping_list_{current_date}.txt"
         shopping_list = {}
@@ -282,13 +287,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
             file.write(f"{user.username}, Ваш список покупок на {current_date}\n\n\n")
             for ingredient, amount in shopping_list.items():
                 file.write(f"{ingredient} — {amount}\n")
-            file.write(f"\n\n\nСформировано на сайте http://127.0.0.1:8000, Foodgram project")
+            file.write(
+                '\n\n\nСформировано на сайте '
+                'http://www.iceadmin.ru, Foodgram project'
+            )
         with open(filename, 'r', encoding='utf-8') as file:
             file_content = file.read()
         response = HttpResponse(file_content, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filename)}"'
+        response['Content-Disposition'] = (f'attachment; filename="{os.path.basename(filename)}"')
         return response
-    
+
     @action(
             detail=True, methods=['POST', 'DELETE'],
             permission_classes=(IsAuthenticated,)
@@ -299,7 +307,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe = self.get_object()
         except Http404:
             if request.method == 'POST':
-                raise ParseError(detail=f"Данный рецепт не существует")
+                raise ParseError(
+                    detail="Данный рецепт не существует"
+                )
             raise Http404
 
         favorites_user = user.favorites.filter(pk=recipe.pk)

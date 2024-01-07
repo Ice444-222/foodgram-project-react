@@ -1,16 +1,10 @@
 from django.urls import include, path
-
 from rest_framework.routers import DefaultRouter
 
-from .views import (
-    UserViewSet,
-    TagViewSet,
-    CustomTokenObtainPairView,
-    TokenLogoutView,
-    RecipeViewSet,
-    IngredientViewSet
-)
+from users.views import CustomTokenObtainPairView
 
+from .views import (IngredientViewSet, RecipeViewSet, TagViewSet,
+                    TokenLogoutView, UserViewSet)
 
 router = DefaultRouter()
 router.register("users", UserViewSet, basename="users")

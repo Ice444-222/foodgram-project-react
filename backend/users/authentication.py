@@ -1,7 +1,8 @@
-from rest_framework.authentication import BaseAuthentication, get_authorization_header
-from rest_framework.exceptions import AuthenticationFailed
-from django.contrib.auth.models import User
+from rest_framework.authentication import (BaseAuthentication,
+                                           get_authorization_header)
 from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import AuthenticationFailed
+
 
 class CustomTokenAuthentication(BaseAuthentication):
     keyword = 'Token'
@@ -12,16 +13,16 @@ class CustomTokenAuthentication(BaseAuthentication):
             return None
 
         if len(auth_header) == 1:
-            msg = 'Invalid token header. No credentials provided.'
+            msg = 'Неверный заголовок токена. Учётные данные не предоставлены.'
             raise AuthenticationFailed(msg)
         elif len(auth_header) > 2:
-            msg = 'Invalid token header. Token string should not contain spaces.'
+            msg = 'Неверный заголовок токена. Строка токена не должна содержать пробелов.'
             raise AuthenticationFailed(msg)
 
         try:
             token = auth_header[1].decode()
         except UnicodeError:
-            msg = 'Invalid token header. Token string should not contain invalid characters.'
+            msg = 'Неверный заголовок токена. Строка токена не должна содеражть запрещённые символы.'
             raise AuthenticationFailed(msg)
 
         return self.authenticate_credentials(token)
@@ -30,9 +31,9 @@ class CustomTokenAuthentication(BaseAuthentication):
         try:
             token = Token.objects.get(key=key)
         except Token.DoesNotExist:
-            raise AuthenticationFailed('Invalid token.')
+            raise AuthenticationFailed('Неправильный токен.')
 
         if not token.user.is_active:
-            raise AuthenticationFailed('User inactive or deleted.')
+            raise AuthenticationFailed('Юзер неактивен или удалён.')
 
         return (token.user, token)

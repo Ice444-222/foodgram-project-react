@@ -1,19 +1,17 @@
 from django.contrib import admin
 
-from .models import (Tag,
-                     Recipe,
-                     Ingredient,
-                     RecipesIngredients)
+from .models import Ingredient, Recipe, RecipesIngredients, Tag
 
 
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'favorites_count')
     list_filter = ('author', 'name', 'tags__name',)
-    
+
     def favorites_count(self, obj):
         return obj.favorites.count()
 
     favorites_count.short_description = 'Добовлено в избранное количество раз'
+
 
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit',)

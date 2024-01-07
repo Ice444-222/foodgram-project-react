@@ -1,18 +1,13 @@
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
-from rest_framework.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
-from django.contrib.auth import authenticate
-from django.contrib.auth.hashers import check_password
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.exceptions import BadRequest
-from rest_framework import status
-from rest_framework.response import Response
 import base64
+
+from django.contrib.auth import get_user_model
+from django.core.exceptions import BadRequest, ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.db.models import F
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
-from recipes.models import Tag, Recipe, RecipesIngredients, Ingredient, RecipesIngredients
+from recipes.models import Ingredient, Recipe, RecipesIngredients, Tag
 
 User = get_user_model()
 
@@ -205,11 +200,15 @@ class RecipesSerializer(serializers.ModelSerializer):
 
             if int(ingredient['amount']) < 1:
                 raise serializers.ValidationError(
-                    'Количество условных единиц ингредиенов не может быть меньше 1.')
+                    'Количество условных единиц '
+                    'ингредиенов не может быть меньше 1.'
+                )
             try:
                 Ingredient.objects.get(id=ingredient['id'])
             except Ingredient.DoesNotExist:
-                raise serializers.ValidationError(f'Ингредиент с id {ingredient["id"]} не существует.')
+                raise serializers.ValidationError(
+                    f'Ингредиент с id {ingredient["id"]} не существует.'
+                )
         data.update({'author': self.context.get('request').user,
                      'ingredients': ingredients,
                      'tags': tags})
@@ -259,7 +258,7 @@ class UserSubscriptionsSerializer(UserBasicSerializer):
         recipes_limit = (request.GET.get('recipes_limit'))
         recipes = obj.recipes.all()
         if recipes_limit is not None:
-            recipes_limit=int(recipes_limit)
+            recipes_limit = int(recipes_limit)
             recipes = recipes[:recipes_limit]
         return RecipeBriefSerializer(recipes, many=True).data
 
@@ -268,7 +267,8 @@ class UserSubscriptionsSerializer(UserBasicSerializer):
 
     class Meta:
         model = User
-        fields = ["email",
+        fields = [
+            "email",
             "id",
             "username",
             "first_name",

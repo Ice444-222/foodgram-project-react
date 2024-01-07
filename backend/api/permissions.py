@@ -1,5 +1,6 @@
 from rest_framework import permissions
-from rest_framework.exceptions import MethodNotAllowed, PermissionDenied, AuthenticationFailed
+from rest_framework.exceptions import (AuthenticationFailed, MethodNotAllowed,
+                                       PermissionDenied)
 
 
 class IsAdmin(permissions.BasePermission):
@@ -9,23 +10,29 @@ class IsAdmin(permissions.BasePermission):
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.method not in permissions.SAFE_METHODS and not request.user.is_staff:
+        if (
+            request.method not in permissions.SAFE_METHODS
+            and not request.user.is_staff
+        ):
             raise MethodNotAllowed(request.method)
         return True
-    
+
+
 class SafeMethodOrAuthor(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.method not in permissions.SAFE_METHODS and not request.user.is_authenticated:
+        if (
+            request.method not in permissions.SAFE_METHODS and not
+            request.user.is_authenticated
+        ):
             raise AuthenticationFailed(request.method)
         return True
+
     def has_object_permission(self, request, view, obj):
         if request.method not in permissions.SAFE_METHODS:
             if obj.author == request.user:
                 return True
             raise PermissionDenied(request.method)
         return True
-        
-
 
 
 class IsAuthorOrAdminOrModeratorOrReadOnly(permissions.BasePermission):

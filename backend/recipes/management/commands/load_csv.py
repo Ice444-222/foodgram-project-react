@@ -1,7 +1,9 @@
 import csv
-from django.core.management.base import BaseCommand
-from recipes.models import Ingredient
+
 from django.apps import apps  # Replace with your actual model
+from django.core.management.base import BaseCommand
+
+from recipes.models import Ingredient
 
 PATH = 'data/'
 

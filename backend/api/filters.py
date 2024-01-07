@@ -1,10 +1,8 @@
-from django_filters.rest_framework import CharFilter, FilterSet, ModelChoiceFilter, BooleanFilter, LookupChoiceFilter, ModelMultipleChoiceFilter
-from django.db.models import F, Exists, OuterRef
+from django_filters.rest_framework import (BooleanFilter, CharFilter,
+                                           FilterSet,
+                                           ModelMultipleChoiceFilter)
+
 from recipes.models import Ingredient, Recipe, Tag
-
-
-
-
 
 
 class IngredientFilter(FilterSet):
@@ -31,22 +29,23 @@ class RecipeFilter(FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ('author','tags__slug', 'is_favorited', 'is_in_shopping_cart')
-
+        fields = (
+            'author', 'tags__slug', 'is_favorited', 'is_in_shopping_cart'
+        )
 
     def filter_tags(self, queryset, name, value):
         return queryset.filter(tags__slug__in=value)
 
     def filter_is_favorited(self, queryset, name, value):
         if value:
-            user=self.request.user
+            user = self.request.user
             if user.is_authenticated:
                 return user.favorites.all()
         return queryset
-    
+
     def filter_is_in_shopping_cart(self, queryset, name, value):
         if value:
-            user=self.request.user
+            user = self.request.user
             if user.is_authenticated:
                 return user.groceries_list.all()
         return queryset

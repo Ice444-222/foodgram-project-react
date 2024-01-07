@@ -5,10 +5,10 @@ from django.db import models
 from .validators import validate_username
 
 
-
 class UserRoles(models.TextChoices):
     ADMIN = "admin"
     USER = "user"
+
 
 class User(AbstractUser):
     username = models.CharField(
@@ -43,7 +43,6 @@ class User(AbstractUser):
         verbose_name = "пользователь"
         verbose_name_plural = "Пользователи"
 
-
     @property
     def is_user(self):
         return self.role == UserRoles.USER
@@ -52,13 +51,18 @@ class User(AbstractUser):
     def is_admin(self):
         if self.role == UserRoles.ADMIN:
             return True
-        
+
     def __str__(self):
         return self.username
-        
+
+
 class Subscription(models.Model):
-    subscription = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscribers')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    subscription = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='subscribers'
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='subscriptions'
+    )
 
     class Meta:
         constraints = [
