@@ -14,7 +14,7 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 
 DEBUG = (os.getenv('DEBUG') == 'True')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '158.160.17.244', 'iceadmin.ru']
+ALLOWED_HOSTS = str(os.getenv('ALLOWED_HOSTS')).split(',')
 
 
 # Application definition
