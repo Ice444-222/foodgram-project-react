@@ -204,7 +204,7 @@ class TokenLogoutView(APIView):
                 OutstandingToken.objects.filter(token=access_token).delete()
             if refresh_token:
                 RefreshToken(refresh_token).blacklist()
-        except Exception as e:
+        except Exception:
             return Response(
                 {'detail': 'Учетные данные не были предоставлены.'},
                 status=status.HTTP_401_UNAUTHORIZED
@@ -275,7 +275,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         shopping_list = {}
 
         for recipe_ingredient in recipes_ingredients:
-            ingredient_name = f"{recipe_ingredient.ingredient.name} ({recipe_ingredient.ingredient.measurement_unit})"
+            ingredient_name = (
+                f"{recipe_ingredient.ingredient.name} "
+                f"{recipe_ingredient.ingredient.measurement_unit}"
+            )
             amount = recipe_ingredient.amount
 
             if ingredient_name in shopping_list:
@@ -284,7 +287,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 shopping_list[ingredient_name] = amount
 
         with open(filename, 'w', encoding='utf-8') as file:
-            file.write(f"{user.username}, Ваш список покупок на {current_date}\n\n\n")
+            file.write(
+                f"{user.username}, Ваш список покупок на {current_date}\n\n\n"
+            )
             for ingredient, amount in shopping_list.items():
                 file.write(f"{ingredient} — {amount}\n")
             file.write(
@@ -294,7 +299,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         with open(filename, 'r', encoding='utf-8') as file:
             file_content = file.read()
         response = HttpResponse(file_content, content_type='text/plain')
-        response['Content-Disposition'] = (f'attachment; filename="{os.path.basename(filename)}"')
+        response['Content-Disposition'] = (
+            f'attachment; filename="{os.path.basename(filename)}"'
+        )
         return response
 
     @action(
