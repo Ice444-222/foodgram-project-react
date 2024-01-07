@@ -108,7 +108,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.get_object()
         user.delete()
         return Response(
-            {"detail": "User deleted successfully."},
+            {"detail": "Пользователь удалён."},
             status=status.HTTP_204_NO_CONTENT
         )
 
@@ -121,7 +121,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.is_active = False
         user.save()
         return Response(
-            {"detail": "User blocked successfully."}, status=status.HTTP_200_OK
+            {"detail": "Пользователь заблокирован."}, status=status.HTTP_200_OK
         )
 
     @action(
@@ -282,7 +282,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 file.write(f"{ingredient} — {amount}\n")
             file.write(
                 '\n\n\nСформировано на сайте '
-                'http://www.iceadmin.ru, Foodgram project'
+                'www.iceadmin.ru, Foodgram project'
             )
         with open(filename, 'r', encoding='utf-8') as file:
             file_content = file.read()

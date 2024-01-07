@@ -66,7 +66,7 @@ class UserNewPasswordSerializer(serializers.Serializer):
         new_password = attrs.get('new_password')
         user = self.context['request'].user
         if current_password != user.password:
-            raise serializers.ValidationError('Incorrect current password.')
+            raise serializers.ValidationError('Неверный текущий пароль.')
         user.password = new_password
         user.save(update_fields=['password'])
 
