@@ -185,11 +185,7 @@ class RecipesSerializer(serializers.ModelSerializer):
                 )
         return tags
 
-
-    def validate(self, data):
-        self.validate_tags()
-
-
+    def validate_ingredients(self, ingredients):
         ingredients = self.initial_data.get('ingredients')
         if not ingredients:
             raise serializers.ValidationError(
@@ -212,9 +208,11 @@ class RecipesSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f'Ингредиент с id {ingredient["id"]} не существует.'
                 )
+
+    def validate(self, data):
         data.update({'author': self.context.get('request').user,
-                     'ingredients': ingredients,
-                     'tags': tags})
+                     'ingredients': self.validate_ingredients(),
+                     'tags': self.validate_tags()})
         return data
 
     def create(self, validated_data):
