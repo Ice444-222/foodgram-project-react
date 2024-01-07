@@ -17,7 +17,7 @@ from recipes.models import Ingredient, Recipe, RecipesIngredients, Tag
 from users.models import Subscription, User
 
 from .filters import IngredientFilter, RecipeFilter
-from .permissions import IsAdminOrReadOnly, SafeMethodOrAuthor
+from .permissions import IsAdminOrReadOnly, SafeMethodOrAuthor, IsAdmin
 from .serializers import (IngredientSerializer, RecipeBriefSerializer,
                           RecipesSerializer, TagSerializer,
                           UserBasicSerializer, UserCreateSerializer,
@@ -90,7 +90,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
             detail=True, methods=['PUT'],
-            permission_classes=(permissions.IsAdminUser,)
+            permission_classes=(IsAdmin,)
         )
     def edit_user(self, request, pk=None):
         user = self.get_object()
@@ -102,7 +102,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
             detail=True, methods=['DELETE'],
-            permission_classes=(permissions.IsAdminUser,)
+            permission_classes=(IsAdmin,)
         )
     def delete_user(self, request, pk=None):
         user = self.get_object()
@@ -114,7 +114,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
             detail=True, methods=['POST'],
-            permission_classes=(permissions.IsAdminUser,)
+            permission_classes=(IsAdmin,)
         )
     def block_user(self, request, pk=None):
         user = self.get_object()

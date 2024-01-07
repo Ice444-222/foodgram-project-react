@@ -1,17 +1,17 @@
 import csv
 
-from django.apps import apps  # Replace with your actual model
 from django.core.management.base import BaseCommand
 
 from recipes.models import Ingredient
 
 PATH = 'data/'
 
+
 class Command(BaseCommand):
-    help = 'Populate the database with data from a CSV file'
+    help = 'Импортирование данных из CSV файла'
 
     def add_arguments(self, parser):
-        parser.add_argument('csv_file', type=str, help='Path to the CSV file')
+        parser.add_argument('csv_file', type=str, help='Путь к CSV файлу')
 
     def handle(self, *args, **options):
         csv_file_path = options['csv_file']
@@ -22,10 +22,9 @@ class Command(BaseCommand):
                 name = row[0]
                 measurement_unit = row[1]
 
-                # Create Ingredient object
                 Ingredient.objects.create(
                     name=name,
                     measurement_unit=measurement_unit,
                 )
 
-        self.stdout.write(self.style.SUCCESS('Data imported successfully!'))
+        self.stdout.write(self.style.SUCCESS('Данные импортированы!'))
