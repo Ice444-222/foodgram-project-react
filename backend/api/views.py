@@ -141,9 +141,9 @@ class UserViewSet(viewsets.ModelViewSet):
         return paginator.get_paginated_response(serializer.data)
 
     @action(
-            detail=True, methods=['POST', 'DELETE'],
-            permission_classes=(IsAuthenticated,)
-        )
+        detail=True, methods=['POST', 'DELETE'],
+        permission_classes=(IsAuthenticated,)
+    )
     def subscribe(self, request, pk=None):
         user = request.user
         subscription = self.get_object()
@@ -195,7 +195,7 @@ class TokenLogoutView(APIView):
             return Response(
                 {'detail': 'Учетные данные не были предоставлены.'},
                 status=status.HTTP_401_UNAUTHORIZED
-                )
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -215,9 +215,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     @action(
-            detail=True, methods=['POST', 'DELETE'],
-            permission_classes=(IsAuthenticated,)
-        )
+        detail=True, methods=['POST', 'DELETE'],
+        permission_classes=(IsAuthenticated,)
+    )
     def shopping_cart(self, request, pk=None):
         try:
             recipe = self.get_object()
@@ -247,9 +247,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
     @action(
-            detail=False, methods=['GET'],
-            permission_classes=(IsAuthenticated,)
-        )
+        detail=False, methods=['GET'],
+        permission_classes=(IsAuthenticated,)
+    )
     def download_shopping_cart(self, request, *args, **kwargs):
         user = request.user
         shopping_cart = user.groceries_list.all()
@@ -292,9 +292,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
     @action(
-            detail=True, methods=['POST', 'DELETE'],
-            permission_classes=(IsAuthenticated,)
-        )
+        detail=True, methods=['POST', 'DELETE'],
+        permission_classes=(IsAuthenticated,)
+    )
     def favorite(self, request, pk=None):
         user = request.user
         try:
