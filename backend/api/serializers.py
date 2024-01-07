@@ -33,8 +33,7 @@ class UserBasicSerializer(serializers.ModelSerializer):
         user = self.context.get('request').user
         if user.is_authenticated:
             return user.subscriptions.filter(subscription=obj).exists()
-        else:
-            return False
+        return False
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -47,7 +46,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "password",
-            ]
+        ]
         extra_kwargs = {
             'password': {'write_only': True},
         }

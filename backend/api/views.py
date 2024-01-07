@@ -58,8 +58,7 @@ class UserViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             pass
 
-        response = super().create(request, *args, **kwargs)
-        return response
+        return super().create(request, *args, **kwargs)
 
     @action(
         detail=False, methods=['GET'],
@@ -77,9 +76,9 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-            detail=False, methods=['POST'],
-            permission_classes=(IsAuthenticated,)
-        )
+        detail=False, methods=['POST'],
+        permission_classes=(IsAuthenticated,)
+    )
     def set_password(self, request, *args, **kwargs):
         serializer = UserNewPasswordSerializer(
             data=request.data, context={'request': request}
@@ -89,9 +88,9 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-            detail=True, methods=['PUT'],
-            permission_classes=(IsAdmin,)
-        )
+        detail=True, methods=['PUT'],
+        permission_classes=(IsAdmin,)
+    )
     def edit_user(self, request, pk=None):
         user = self.get_object()
         serializer = UserBasicSerializer(user, data=request.data, partial=True)
@@ -101,9 +100,9 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-            detail=True, methods=['DELETE'],
-            permission_classes=(IsAdmin,)
-        )
+        detail=True, methods=['DELETE'],
+        permission_classes=(IsAdmin,)
+    )
     def delete_user(self, request, pk=None):
         user = self.get_object()
         user.delete()
@@ -113,9 +112,9 @@ class UserViewSet(viewsets.ModelViewSet):
         )
 
     @action(
-            detail=True, methods=['POST'],
-            permission_classes=(IsAdmin,)
-        )
+        detail=True, methods=['POST'],
+        permission_classes=(IsAdmin,)
+    )
     def block_user(self, request, pk=None):
         user = self.get_object()
         user.is_active = False
@@ -125,9 +124,9 @@ class UserViewSet(viewsets.ModelViewSet):
         )
 
     @action(
-            detail=False, methods=['GET'],
-            permission_classes=(IsAuthenticated,)
-        )
+        detail=False, methods=['GET'],
+        permission_classes=(IsAuthenticated,)
+    )
     def subscriptions(self, request, *args, **kwargs):
         user = request.user
         user_subscriptions = User.objects.filter(subscribers__user=user)
