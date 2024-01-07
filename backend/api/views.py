@@ -25,11 +25,6 @@ from .serializers import (IngredientSerializer, RecipeBriefSerializer,
                           UserSubscriptionsSerializer)
 
 
-class RecipePageNumberPagination(PageNumberPagination):
-    page_size_query_param = 'recipe_limit'
-    page_size_query_param = 'limit'
-
-
 class UserPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
@@ -183,13 +178,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 {"detail": 'Вы не подписанына этого пользователя'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-
-class UserAdminCreateDeleteView(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
-    queryset = User.objects.all()
-    serializer_class = UserCreateSerializer
-    http_method_names = ['get', 'post']
 
 
 class TokenLogoutView(APIView):

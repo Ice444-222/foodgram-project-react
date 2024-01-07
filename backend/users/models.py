@@ -12,7 +12,6 @@ class UserRoles(models.TextChoices):
 
 class User(AbstractUser):
     username = models.CharField(
-        verbose_name="Никнейм",
         max_length=150,
         unique=True,
         validators=[
@@ -22,21 +21,22 @@ class User(AbstractUser):
             ),
             validate_username,
         ],
+        verbose_name="Никнейм",
     )
     email = models.EmailField(
-        verbose_name="Электронная почта", max_length=254, unique=True
+        max_length=254, unique=True, verbose_name="Электронная почта",
     )
     first_name = models.CharField(
-        verbose_name="Имя", max_length=150,
+        max_length=150, verbose_name="Имя",
     )
     last_name = models.CharField(
-        verbose_name="Фамилия", max_length=150,
+        max_length=150, verbose_name="Фамилия",
     )
     role = models.CharField(
-        verbose_name="Роль",
         choices=UserRoles.choices,
         default=UserRoles.USER,
         max_length=20,
+        verbose_name="Роль",
     )
 
     class Meta:
