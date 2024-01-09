@@ -122,8 +122,6 @@ class RecipesIngredientsSerializer(serializers.ModelSerializer):
 
 class RecipesSerializer(serializers.ModelSerializer):
     author = UserBasicSerializer(read_only=True)
-    is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
     ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(read_only=True, many=True)
     image = Base64ImageField()
@@ -133,18 +131,6 @@ class RecipesSerializer(serializers.ModelSerializer):
         fields = ["id", "tags", "author", "ingredients",
                   "is_favorited", "is_in_shopping_cart",
                   "name", "image", "text", "cooking_time"]
-
-        extra_kwargs = {
-            'image': {'required': True}
-        }
-
-    def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        return obj.favorites.filter(pk=user.pk).exists()
-
-    def get_is_in_shopping_cart(self, obj):
-        user = self.context['request'].user
-        return obj.groceries_list.filter(pk=user.pk).exists()
 
     def get_ingredients(self, obj):
         recipe = obj
@@ -255,7 +241,7 @@ class UserSubscriptionsSerializer(UserBasicSerializer):
 
     def get_recipes(self, obj):
         request = self.context.get('request')
-        recipes_limit = (request.GET.get('recipes_limit'))
+        recipes_limit = request.GET.get('recipes_limit')
         recipes = obj.recipes.all()
         if recipes_limit is not None:
             recipes_limit = int(recipes_limit)

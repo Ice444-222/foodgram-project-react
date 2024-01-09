@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+from django.db.models import Case, When, BooleanField, Value
 from django.http import Http404, HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
@@ -208,11 +209,26 @@ class TagViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (SafeMethodOrAuthor | IsAdminOrReadOnly,)
-    queryset = Recipe.objects.all()
     serializer_class = RecipesSerializer
     pagination_class = UserPageNumberPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = RecipeFilter
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Recipe.objects.annotate(
+            is_favorited=Case(
+                When(favorites__pk=user.pk, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            ),
+            is_in_shopping_cart=Case(
+                When(groceries_list__pk=user.pk, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            )
+        )
+        return queryset
 
     @action(
         detail=True, methods=['POST', 'DELETE'],
