@@ -156,18 +156,18 @@ class RecipesSerializer(serializers.ModelSerializer):
         if not tags:
             raise serializers.ValidationError(
                 'Необходимо добавить теги.')
-        diblicate_tags = []
+        dublicate_tags = []
         for tag in tags:
-            if tag in diblicate_tags:
+            if tag in dublicate_tags:
                 raise serializers.ValidationError(
                     f'У тега с id {tag} есть дубликат.'
                 )
-            diblicate_tags.append(tag)
+            dublicate_tags.append(tag)
             try:
                 Tag.objects.get(id=tag)
             except Tag.DoesNotExist:
                 raise serializers.ValidationError(
-                    f'Тэк с id {tag} не существует.'
+                    f'Тэг с id {tag} не существует.'
                 )
         return tags
 
@@ -176,13 +176,13 @@ class RecipesSerializer(serializers.ModelSerializer):
         if not ingredients:
             raise serializers.ValidationError(
                 'Необходимо добавить ингредиенты.')
-        diblicate_ingredients = []
+        dublicate_ingredients = []
         for ingredient in ingredients:
-            if ingredient['id'] in diblicate_ingredients:
+            if ingredient['id'] in dublicate_ingredients:
                 raise serializers.ValidationError(
                     f'У ингредиента с id {ingredient["id"]} есть дубликат.'
                 )
-            diblicate_ingredients.append(ingredient['id'])
+            dublicate_ingredients.append(ingredient['id'])
             if int(ingredient['amount']) < 1:
                 raise serializers.ValidationError(
                     'Количество условных единиц '

@@ -35,17 +35,3 @@ class RecipeFilter(FilterSet):
 
     def filter_tags(self, queryset, name, value):
         return queryset.filter(tags__slug__in=value)
-
-    def filter_is_favorited(self, queryset, name, value):
-        if value:
-            user = self.request.user
-            if user.is_authenticated:
-                return user.favorites.all()
-        return queryset
-
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        if value:
-            user = self.request.user
-            if user.is_authenticated:
-                return user.groceries_list.all()
-        return queryset
