@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 from recipes.models import Ingredient, Recipe, RecipesIngredients, Tag
 
 User = get_user_model()
+MIN_INGREDIENT_AMOUNT = 1
 
 
 class UserBasicSerializer(serializers.ModelSerializer):
@@ -141,14 +142,15 @@ class RecipesSerializer(serializers.ModelSerializer):
             amount=F('recipe__amount'),)
         return ingredients
 
-    def recipes_ingredients_tags_create(self, tags, ingredients, recipe):
+    @staticmethod
+    def recipes_ingredients_tags_create(tags, ingredients, recipe):
         recipe.tags.set(tags)
-        for i in ingredients:
-            RecipesIngredients.objects.create(
-                ingredient_id=i.get('id'),
-                amount=i.get('amount'),
+        RecipesIngredients.objects.bulk_create(
+            [RecipesIngredients(
+                ingredient=ingredient,
+                amount=amount,
                 recipe=recipe
-            )
+            ) for ingredient, amount in ingredients.values()])
         return recipe
 
     def validate_tags(self, tags):
@@ -183,7 +185,7 @@ class RecipesSerializer(serializers.ModelSerializer):
                     f'У ингредиента с id {ingredient["id"]} есть дубликат.'
                 )
             dublicate_ingredients.append(ingredient['id'])
-            if int(ingredient['amount']) < 1:
+            if int(ingredient['amount']) < MIN_INGREDIENT_AMOUNT:
                 raise serializers.ValidationError(
                     'Количество условных единиц '
                     'ингредиенов не может быть меньше 1.'

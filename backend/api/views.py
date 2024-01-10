@@ -7,7 +7,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ParseError
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,10 +23,7 @@ from .serializers import (IngredientSerializer, RecipeBriefSerializer,
                           UserBasicSerializer, UserCreateSerializer,
                           UserNewPasswordSerializer,
                           UserSubscriptionsSerializer)
-
-
-class UserPageNumberPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
+from .pagination import UserPageNumberPagination
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -175,7 +171,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 user_subscriptions.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(
-                {"detail": 'Вы не подписанына этого пользователя'},
+                {"detail": 'Вы не подписаны на этого пользователя'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
