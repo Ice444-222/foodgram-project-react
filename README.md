@@ -77,5 +77,5 @@ https://iceadmin.ru/recipes/id/edit
 
 
 
-## Состояние рабочего процесса
+## Состояние рабочего процессаа
 ![process](https://github.com/ice444-222/kittygram_final/actions/workflows/main.yml/badge.svg?event=push)
