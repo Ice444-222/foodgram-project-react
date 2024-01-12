@@ -156,14 +156,14 @@ class RecipesSerializer(serializers.ModelSerializer):
         return ingredients
 
     @staticmethod
-    def recipes_ingredients_tags_create(tags, ingredients, recipe):
-        recipe.tags.set(tags)
-        RecipesIngredients.objects.bulk_create(
-            [RecipesIngredients(
-                ingredient=ingredient,
-                amount=amount,
-                recipe=recipe
-            ) for ingredient, amount in ingredients.values()])
+    def recipes_ingredients_tags_create(self, tags, ingredients, recipe): 
+        recipe.tags.set(tags) 
+        for i in ingredients: 
+            RecipesIngredients.objects.create( 
+                ingredient_id=i.get('id'), 
+                amount=i.get('amount'), 
+                recipe=recipe 
+            ) 
         return recipe
 
     def validate_tags(self):
@@ -171,18 +171,18 @@ class RecipesSerializer(serializers.ModelSerializer):
         if not tags:
             raise serializers.ValidationError(
                 'Необходимо добавить теги.')
-        dublicate_tags = []
+        diblicate_tags = []
         for tag in tags:
-            if tag in dublicate_tags:
+            if tag in diblicate_tags:
                 raise serializers.ValidationError(
                     f'У тега с id {tag} есть дубликат.'
                 )
-            dublicate_tags.append(tag)
+            diblicate_tags.append(tag)
             try:
                 Tag.objects.get(id=tag)
             except Tag.DoesNotExist:
                 raise serializers.ValidationError(
-                    f'Тэг с id {tag} не существует.'
+                    f'Тэк с id {tag} не существует.'
                 )
         return tags
 
@@ -191,14 +191,14 @@ class RecipesSerializer(serializers.ModelSerializer):
         if not ingredients:
             raise serializers.ValidationError(
                 'Необходимо добавить ингредиенты.')
-        dublicate_ingredients = []
+        diblicate_ingredients = []
         for ingredient in ingredients:
-            if ingredient['id'] in dublicate_ingredients:
+            if ingredient['id'] in diblicate_ingredients:
                 raise serializers.ValidationError(
                     f'У ингредиента с id {ingredient["id"]} есть дубликат.'
                 )
-            dublicate_ingredients.append(ingredient['id'])
-            if int(ingredient['amount']) < MIN_INGREDIENT_AMOUNT:
+            diblicate_ingredients.append(ingredient['id'])
+            if int(ingredient['amount']) < 1:
                 raise serializers.ValidationError(
                     'Количество условных единиц '
                     'ингредиенов не может быть меньше 1.'
