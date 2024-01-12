@@ -155,7 +155,7 @@ class RecipesSerializer(serializers.ModelSerializer):
             amount=F('recipe__amount'),)
         return ingredients
 
-    @staticmethod
+
     def recipes_ingredients_tags_create(self, tags, ingredients, recipe): 
         recipe.tags.set(tags) 
         for i in ingredients: 
