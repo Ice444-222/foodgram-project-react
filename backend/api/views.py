@@ -258,11 +258,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         self.cart_favorite_method(request,user.groceries_list)
 
+
+    
     @action(
-        detail=False, methods=['GET'],
+        detail=True, methods=['POST', 'DELETE'],
         permission_classes=(IsAuthenticated,)
     )
-    
     def favorite(self, request, pk=None):
         user = request.user
         try:
@@ -293,6 +294,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
     
+    @action(
+        detail=False, methods=['GET'],
+        permission_classes=(IsAuthenticated,)
+    )
     def download_shopping_cart(self, request, *args, **kwargs):
         user = request.user
         shopping_cart = user.groceries_list.all()
@@ -334,10 +339,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         return response
 
-    @action(
-        detail=True, methods=['POST', 'DELETE'],
-        permission_classes=(IsAuthenticated,)
-    )
+
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
