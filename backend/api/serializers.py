@@ -155,8 +155,8 @@ class RecipesSerializer(serializers.ModelSerializer):
             amount=F('recipe__amount'),)
         return ingredients
 
-
-    def recipes_ingredients_tags_create(self, tags, ingredients, recipe): 
+    @staticmethod
+    def recipes_ingredients_tags_create(tags, ingredients, recipe): 
         recipe.tags.set(tags) 
         for i in ingredients: 
             RecipesIngredients.objects.create( 
@@ -166,7 +166,7 @@ class RecipesSerializer(serializers.ModelSerializer):
             ) 
         return recipe
 
-    def validate_tags(self, tags):
+    def validate_tags(self):
         tags = self.initial_data.get('tags')
         if not tags:
             raise serializers.ValidationError(
@@ -186,7 +186,7 @@ class RecipesSerializer(serializers.ModelSerializer):
                 )
         return tags
 
-    def validate_ingredients(self, ingredients):
+    def validate_ingredients(self):
         ingredients = self.initial_data.get('ingredients')
         if not ingredients:
             raise serializers.ValidationError(
@@ -220,7 +220,9 @@ class RecipesSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
+        print (**validated_data)
         recipe = Recipe.objects.create(**validated_data)
+        print (recipe)
         return self.recipes_ingredients_tags_create(
             tags, ingredients, recipe
         )
