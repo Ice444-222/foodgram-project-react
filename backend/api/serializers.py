@@ -209,6 +209,7 @@ class RecipesSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f'Ингредиент с id {ingredient["id"]} не существует.'
                 )
+        return ingredients
 
     def validate(self, data):
         data.update({'author': self.context.get('request').user,
