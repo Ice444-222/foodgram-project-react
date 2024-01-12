@@ -6,7 +6,7 @@ from django.core.files.base import ContentFile
 from django.db.models import F
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-
+from django.db import transaction
 from recipes.models import Ingredient, Recipe, RecipesIngredients, Tag
 
 User = get_user_model()
@@ -156,14 +156,19 @@ class RecipesSerializer(serializers.ModelSerializer):
         return ingredients
 
     @staticmethod
-    def recipes_ingredients_tags_create(tags, ingredients, recipe): 
-        recipe.tags.set(tags) 
-        for i in ingredients: 
-            RecipesIngredients.objects.create( 
-                ingredient_id=i.get('id'), 
-                amount=i.get('amount'), 
-                recipe=recipe 
-            ) 
+    def recipes_ingredients_tags_create(tags, ingredients, recipe):
+        with transaction.atomic():
+            recipe.tags.set(tags)
+            recipe_ingredients = [
+                RecipesIngredients(
+                    ingredient_id=i.get('id'),
+                    amount=i.get('amount'),
+                    recipe=recipe
+                )
+                for i in ingredients
+            ]
+            RecipesIngredients.objects.bulk_create(recipe_ingredients)
+
         return recipe
 
     def validate_tags(self):
@@ -221,7 +226,6 @@ class RecipesSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        print (recipe)
         return self.recipes_ingredients_tags_create(
             tags, ingredients, recipe
         )
