@@ -167,18 +167,17 @@ class RecipesSerializer(serializers.ModelSerializer):
         if not tags:
             raise serializers.ValidationError(
                 'Необходимо добавить теги.')
-        diblicate_tags = []
+        unique_tags = set(tags)
+        if len(unique_tags) < len (tags):
+            raise serializers.ValidationError( 
+            f'В списке есть теги дубликаты.' 
+            )
         for tag in tags:
-            if tag in diblicate_tags:
-                raise serializers.ValidationError(
-                    f'У тега с id {tag} есть дубликат.'
-                )
-            diblicate_tags.append(tag)
             try:
                 Tag.objects.get(id=tag)
             except Tag.DoesNotExist:
                 raise serializers.ValidationError(
-                    f'Тэк с id {tag} не существует.'
+                    f'Тэг с id {tag} не существует.'
                 )
         return tags
 
