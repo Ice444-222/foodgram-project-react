@@ -11,6 +11,7 @@ from recipes.models import Ingredient, Recipe, RecipesIngredients, Tag
 
 User = get_user_model()
 MIN_INGREDIENT_AMOUNT = 1
+MAX_RECIPES_PER_PAGE = 6
 
 
 class UserBasicSerializer(serializers.ModelSerializer):
@@ -254,9 +255,11 @@ class UserSubscriptionsSerializer(UserBasicSerializer):
         request = self.context.get('request')
         recipes_limit = request.GET.get('recipes_limit')
         recipes = obj.recipes.all()
-        if recipes_limit is not None:
+        if recipes_limit is not None and recipes_limit.isdigit():
             recipes_limit = int(recipes_limit)
-            recipes = recipes[:recipes_limit]
+        else:
+            recipes_limit = MAX_RECIPES_PER_PAGE
+        recipes = recipes[:recipes_limit]
         return RecipeBriefSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
