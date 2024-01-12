@@ -256,7 +256,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         user = request.user
-        self.cart_favorite_method(request,user.groceries_list)
+        return self.cart_favorite_method(request,user.groceries_list)
 
 
     
