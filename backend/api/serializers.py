@@ -139,7 +139,7 @@ class RecipesSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj): 
         user = self.context['request'].user 
-        return obj.groceries_list.filter(pk=user.pk).exists() 
+        return obj.groceries_list.filter(pk=user.pk).exists()
     
     
     def get_ingredients(self, obj):
