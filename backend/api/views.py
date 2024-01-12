@@ -6,7 +6,7 @@ from django.http import Http404, HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -226,42 +226,73 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).prefetch_related('tags', 'ingredients').select_related('author')
         return queryset
 
+    def cart_favorite_method(self, request, table):
+        try:
+            recipe = self.get_object()
+        except Http404:
+            if request.method == 'POST':
+                raise ValidationError
+            raise Http404
+        relation = table.filter(pk=recipe.pk)
+        if request.method == 'POST':
+            if relation.exists():
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            relation.add(recipe)
+            serializer = RecipeBriefSerializer(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'DELETE':
+            if relation.exists():
+                relation.remove(recipe)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
     @action(
         detail=True, methods=['POST', 'DELETE'],
         permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, pk=None):
-        try:
-            recipe = self.get_object()
-        except Http404:
-            if request.method == 'POST':
-                raise ParseError(detail="Данный рецепт не существует")
-            raise Http404
-
         user = request.user
-        groceries_relation = user.groceries_list.filter(pk=recipe.pk)
-        if request.method == 'POST':
-            if groceries_relation.exists():
-                return Response(
-                    {"detail": 'У вас уже есть этот рецепт в корзине'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            user.groceries_list.add(recipe)
-            serializer = RecipeBriefSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if groceries_relation.exists():
-                user.groceries_list.remove(recipe)
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {"detail": 'У вас нету этого рецепта в корзине'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        self.cart_favorite_method(request,user.groceries_list)
 
     @action(
         detail=False, methods=['GET'],
         permission_classes=(IsAuthenticated,)
     )
+    
+    def favorite(self, request, pk=None):
+        user = request.user
+        try:
+            recipe = self.get_object()
+        except Http404:
+            if request.method == 'POST':
+                raise ParseError(
+                    detail="Данный рецепт не существует"
+                )
+            raise Http404
+
+        favorites_user = user.favorites.filter(pk=recipe.pk)
+        if request.method == 'POST':
+            if favorites_user.exists():
+                return Response(
+                    {"detail": 'У вас уже есть этот рецепт в избранном'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.favorites.add(recipe)
+            serializer = RecipeBriefSerializer(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'DELETE':
+            if favorites_user.exists():
+                user.favorites.remove(recipe)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"detail": 'У вас нету этого рецепта в избранном'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
     def download_shopping_cart(self, request, *args, **kwargs):
         user = request.user
         shopping_cart = user.groceries_list.all()
@@ -307,35 +338,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=True, methods=['POST', 'DELETE'],
         permission_classes=(IsAuthenticated,)
     )
-    def favorite(self, request, pk=None):
-        user = request.user
-        try:
-            recipe = self.get_object()
-        except Http404:
-            if request.method == 'POST':
-                raise ParseError(
-                    detail="Данный рецепт не существует"
-                )
-            raise Http404
-
-        favorites_user = user.favorites.filter(pk=recipe.pk)
-        if request.method == 'POST':
-            if favorites_user.exists():
-                return Response(
-                    {"detail": 'У вас уже есть этот рецепт в избранном'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            user.favorites.add(recipe)
-            serializer = RecipeBriefSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if favorites_user.exists():
-                user.favorites.remove(recipe)
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {"detail": 'У вас нету этого рецепта в избранном'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
