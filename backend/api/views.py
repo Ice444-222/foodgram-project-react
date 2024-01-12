@@ -223,7 +223,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 default=Value(False),
                 output_field=BooleanField()
             )
-        )
+        ).prefetch_related('tags', 'ingredients').select_related('author')
         return queryset
 
     @action(
