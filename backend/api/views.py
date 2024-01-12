@@ -258,8 +258,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         return self.cart_favorite_method(request,user.groceries_list)
 
-
-    
     @action(
         detail=True, methods=['POST', 'DELETE'],
         permission_classes=(IsAuthenticated,)
