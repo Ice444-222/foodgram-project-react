@@ -239,12 +239,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            relation.add(recipe)
+            table.add(recipe)
             serializer = RecipeBriefSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
             if relation.exists():
-                relation.remove(recipe)
+                table.remove(recipe)
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(
                 status=status.HTTP_400_BAD_REQUEST
