@@ -125,7 +125,7 @@ class RecipesSerializer(serializers.ModelSerializer):
     author = UserBasicSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(read_only=True, many=True)
-    is_favorited = serializers.SerializerMethodField() 
+    is_favorited = serializers.BooleanField(source='is_favorited', read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField() 
     image = Base64ImageField()
 
@@ -135,11 +135,7 @@ class RecipesSerializer(serializers.ModelSerializer):
                   "is_favorited", "is_in_shopping_cart",
                   "name", "image", "text", "cooking_time"]
 
-    def get_is_favorited(self, obj): 
-        user = self.context['request'].user 
-        return obj.favorites.filter(pk=user.pk).exists() 
 
- 
 
     def get_is_in_shopping_cart(self, obj): 
         user = self.context['request'].user 
@@ -168,7 +164,6 @@ class RecipesSerializer(serializers.ModelSerializer):
                 for i in ingredients
             ]
             RecipesIngredients.objects.bulk_create(recipe_ingredients)
-
         return recipe
 
     def validate_tags(self):
