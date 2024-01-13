@@ -224,6 +224,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 output_field=BooleanField()
             )
         ).prefetch_related('tags', 'ingredients').select_related('author')
+        print(queryset.query)
         return queryset
 
     def cart_favorite_method(self, request, table):
@@ -256,7 +257,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         user = request.user
-        return self.cart_favorite_method(request,user.groceries_list)
+        updated_queryset = self.cart_favorite_method(request, user.groceries_list)
+        serializer = RecipesSerializer(updated_queryset, many=True)
+        return Response(serializer.data)
 
     @action(
         detail=True, methods=['POST', 'DELETE'],
