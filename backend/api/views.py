@@ -289,7 +289,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
     @action(
-        detail=True, methods=['POST', 'DELETE'],
+        detail=True, methods=['POST'],
         permission_classes=(IsAuthenticated,)
     )
     def favorite(self, request, pk=None):
@@ -297,30 +297,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
         try:
             recipe = self.get_object()
         except Http404:
-            if request.method == 'POST':
-                raise ParseError(
-                    detail="Данный рецепт не существует"
-                )
-            raise Http404
-
+            raise ParseError(
+                detail="Данный рецепт не существует"
+            )
         favorites_user = user.favorites.filter(pk=recipe.pk)
-        if request.method == 'POST':
-            if favorites_user.exists():
-                return Response(
-                    {"detail": 'У вас уже есть этот рецепт в избранном'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            user.favorites.add(recipe)
-            serializer = RecipeBriefSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if favorites_user.exists():
-                user.favorites.remove(recipe)
-                return Response(status=status.HTTP_204_NO_CONTENT)
+        if favorites_user.exists():
             return Response(
-                {"detail": 'У вас нету этого рецепта в избранном'},
+                {"detail": 'У вас уже есть этот рецепт в избранном'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        user.favorites.add(recipe)
+        serializer = RecipeBriefSerializer(recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk=None):
+        user = request.user
+        try:
+            recipe = self.get_object()
+        except Http404:
+            raise Http404
+        favorites_user = user.favorites.filter(pk=recipe.pk)
+        if favorites_user.exists():
+            user.favorites.remove(recipe)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"detail": 'У вас нету этого рецепта в избранном'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
     @action(
         detail=False, methods=['GET'],
