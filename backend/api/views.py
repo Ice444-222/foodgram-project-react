@@ -225,6 +225,7 @@ class UserViewSet(viewsets.ModelViewSet):
         )"""
 
 
+
 class TokenLogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
