@@ -356,7 +356,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             '\n\n\nСформировано на сайте '
             'www.iceadmin.ru, проект Foodgram'
         )
-        content = user_ingredients
         response = HttpResponse(content, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
         return response
