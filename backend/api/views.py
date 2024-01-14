@@ -246,14 +246,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         
-    def cart_favorite_method_delete(self, request, table, pk=None):
+    def cart_favorite_method_delete(self, request, pk, user):
         try:
-            recipe = self.get_object()
+            recipe = Recipe.objects.get(pk=pk)
         except Http404:
             raise Http404
-        relation = table.filter(pk=recipe.pk)
+        relation = user.groceries_list.filter(pk=recipe.pk)
         if relation.exists():
-            table.remove(recipe)
+            user.groceries_list.remove(recipe)
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
             status=status.HTTP_400_BAD_REQUEST
@@ -269,20 +269,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.cart_favorite_method(request, pk, user)
         
     @shopping_cart.mapping.delete
-    def delete_shopping_cart(self, request, pk):
-        try: 
-            recipe = self.get_object() 
-        except Http404:
-            raise Http404
-        user = request.user 
-        groceries_relation = user.groceries_list.filter(pk=recipe.pk)
-        if groceries_relation.exists(): 
-            user.groceries_list.remove(recipe) 
-            return Response(status=status.HTTP_204_NO_CONTENT) 
-        return Response( 
-                {"detail": 'У вас нету этого рецепта в корзине'}, 
-                status=status.HTTP_400_BAD_REQUEST 
-            )
+    def delete_shopping_cart(self, request, *args, **kwargs):
+        user = request.user
+        pk = kwargs.get('pk')
+        return self.cart_favorite_method_delete(request, pk, user)
+
 
     @action(
         detail=True, methods=['POST'],
