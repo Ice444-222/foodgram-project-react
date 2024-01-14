@@ -236,7 +236,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe = Recipe.objects.get(pk=pk)
         except Http404:
             raise ValidationError
-        relation = user.table.filter(pk=recipe.pk)
+        relation = table.filter(pk=recipe.pk)
         if relation.exists():
             return Response(
                 status=status.HTTP_400_BAD_REQUEST
@@ -251,7 +251,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe = Recipe.objects.get(pk=pk)
         except Http404:
             raise Http404
-        relation = user.table.filter(pk=recipe.pk)
+        relation = table.filter(pk=recipe.pk)
         if relation.exists():
             table.remove(recipe)
             return Response(status=status.HTTP_204_NO_CONTENT)
