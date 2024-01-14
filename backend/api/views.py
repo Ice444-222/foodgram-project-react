@@ -231,29 +231,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).prefetch_related('tags', 'ingredients').select_related('author')
         return queryset
 
-    def cart_favorite_method(self, request, pk, user):
+    def cart_favorite_method(self, request, pk, user, table):
         try:
             recipe = Recipe.objects.get(pk=pk)
         except Http404:
             raise ValidationError
-        relation = user.groceries_list.filter(pk=recipe.pk)
+        relation = user.table.filter(pk=recipe.pk)
         if relation.exists():
             return Response(
                 status=status.HTTP_400_BAD_REQUEST
             )
-        user.groceries_list.add(recipe)
+        table.add(recipe)
         serializer = RecipeBriefSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         
-    def cart_favorite_method_delete(self, request, pk, user):
+    def cart_favorite_method_delete(self, request, pk, user, table):
         try:
             recipe = Recipe.objects.get(pk=pk)
         except Http404:
             raise Http404
-        relation = user.groceries_list.filter(pk=recipe.pk)
+        relation = user.table.filter(pk=recipe.pk)
         if relation.exists():
-            user.groceries_list.remove(recipe)
+            table.remove(recipe)
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
             status=status.HTTP_400_BAD_REQUEST
@@ -266,13 +266,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, *args, **kwargs):
         user = request.user
         pk = kwargs.get('pk')
-        return self.cart_favorite_method(request, pk, user)
+        return self.cart_favorite_method(request, pk, user, user.groceries_list)
         
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, *args, **kwargs):
         user = request.user
         pk = kwargs.get('pk')
-        return self.cart_favorite_method_delete(request, pk, user)
+        return self.cart_favorite_method_delete(request, pk, user, user.groceries_list)
 
 
     @action(
