@@ -339,14 +339,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         shopping_list = {}
         
         user_ingredients = (
-            Ingredient.objects
-            .filter(recipe__groceries_list=user)  # Assuming the relationship between Ingredient and Recipe is defined as 'recipe'
+            RecipesIngredients.objects
+            .filter(recipe__groceries_list=user)
             .values(
-                ingredient_name=F('name'),
-                measurement_unit=F('measurement_unit')
+                ingredient_name=F('ingredient__name'),
+                measurement_unit=F('ingredient__measurement_unit')
             )
             .annotate(
-                total_amount=(Sum('recipe__recipesingredients__amount'), Value(0)),
+                total_amount=Coalesce(Sum('amount'), Value(0)),
             )
         )
         content = user_ingredients
