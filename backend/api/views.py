@@ -233,6 +233,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return queryset
 
     def cart_favorite_method(self, request, table, pk=None):
+        user = request.user
         try:
             recipe = self.get_object()
         except Http404:
@@ -242,7 +243,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(
                 status=status.HTTP_400_BAD_REQUEST
             )
-        table.add(recipe)
+        user.groceries_list.add(recipe)
         serializer = RecipeBriefSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -266,7 +267,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         user = request.user
-        return self.cart_favorite_method(request, user.groceries_list, pk)
+        return self.cart_favorite_method(self, request, pk)
         
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
