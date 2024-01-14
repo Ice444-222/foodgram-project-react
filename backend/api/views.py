@@ -139,43 +139,54 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         return paginator.get_paginated_response(serializer.data)
 
-    @action(
-        detail=True, methods=['POST', 'DELETE'],
-        permission_classes=(IsAuthenticated,)
-    )
-    def subscribe(self, request, pk=None):
+
+
+class SubscribeUserAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk=None):
         user = request.user
         subscription = self.get_object()
         user_subscriptions = Subscription.objects.filter(
             user=user, subscription=subscription
         )
-        if request.method == 'POST':
-            if user == subscription:
-                return Response(
-                    {"detail": 'Вы не можете подписаться на самого себя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            if user_subscriptions.exists():
-                return Response(
-                    {"detail": 'Вы уже подписаны на данного пользователя'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            Subscription.objects.create(
-                user=request.user, subscription=subscription
-            )
-            serializer = UserSubscriptionsSerializer(
-                subscription,
-                context={'request': request},
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if user_subscriptions.exists():
-                user_subscriptions.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
+
+        if user == subscription:
             return Response(
-                {"detail": 'Вы не подписаны на этого пользователя'},
+                {"detail": 'Вы не можете подписаться на самого себя.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        if user_subscriptions.exists():
+            return Response(
+                {"detail": 'Вы уже подписаны на данного пользователя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        Subscription.objects.create(
+            user=request.user, subscription=subscription
+        )
+
+        serializer = UserSubscriptionsSerializer(
+            subscription, context={'request': request},
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, pk=None):
+        user = request.user
+        subscription = self.get_object()
+        user_subscriptions = Subscription.objects.filter(
+            user=user, subscription=subscription
+        )
+
+        if user_subscriptions.exists():
+            user_subscriptions.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(
+            {"detail": 'Вы не подписаны на этого пользователя'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class TokenLogoutView(APIView):
@@ -351,7 +362,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             f"{user.username}, Ваш список покупок на {current_date}\n\n\n"
         )
         for ingredient in user_ingredients:
-            content += f"{ingredient['ingredient_name']} {ingredient['measurement_unit']} — {ingredient['total_amount']}\n"
+            content += f"{ingredient['ingredient_name']} ({ingredient['measurement_unit']}) — {ingredient['total_amount']}\n"
         content += (
             '\n\n\nСформировано на сайте '
             'www.iceadmin.ru, проект Foodgram'
@@ -359,38 +370,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
         return response
-        
-        
-        """shopping_cart = user.groceries_list.all()
-        recipes_ingredients = RecipesIngredients.objects.filter(
-            recipe__in=shopping_cart.values_list('pk')
-        )
-        for recipe_ingredient in recipes_ingredients:
-            ingredient_name = (
-                f"{recipe_ingredient.ingredient.name} "
-                f"{recipe_ingredient.ingredient.measurement_unit}"
-            )
-            amount = recipe_ingredient.amount
 
-            if ingredient_name in shopping_list:
-                shopping_list[ingredient_name] += amount
-            else:
-                shopping_list[ingredient_name] = amount
-        
-        
-        content = (
-            f"{user.username}, Ваш список покупок на {current_date}\n\n\n"
-        )
-        for ingredient, amount in shopping_list.items():
-            content += f"{ingredient} — {amount}\n"
-        content += (
-            '\n\n\nСформировано на сайте '
-            'www.iceadmin.ru, проект Foodgram'
-        )
-        response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
-        return response
-        """
 
 
 
