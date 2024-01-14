@@ -1,8 +1,8 @@
 import os
 from datetime import datetime
 
-from django.db.models import Case, When, BooleanField, Value
-from django.http import Http404, HttpResponse
+from django.db.models import Case, When, BooleanField, Value, F, Sum, Count
+from django.http import Http404, HttpResponse, JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
@@ -24,6 +24,8 @@ from .serializers import (IngredientSerializer, RecipeBriefSerializer,
                           UserNewPasswordSerializer,
                           UserSubscriptionsSerializer)
 from .pagination import UserPageNumberPagination
+from django.db.models.functions import Coalesce
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -333,13 +335,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request, *args, **kwargs):
         user = request.user
-        shopping_cart = user.groceries_list.all()
-        recipe_ids = shopping_cart.values_list('pk')
-        recipes_ingredients = RecipesIngredients.objects.filter(
-            recipe__in=recipe_ids
-        )
         current_date = datetime.now().strftime("%Y-%m-%d")
         shopping_list = {}
+        
+        user_ingredients = (
+            Ingredient.objects
+            .filter(recipe__groceries_list=user)  # Assuming the relationship between Ingredient and Recipe is defined as 'recipe'
+            .values(
+                ingredient_name=F('name'),
+                measurement_unit=F('measurement_unit')
+            )
+            .annotate(
+                total_amount=(Sum('recipe__recipesingredients__amount'), Value(0)),
+            )
+        )
+        content = user_ingredients
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
+        return response
+        
+        
+        """shopping_cart = user.groceries_list.all()
+        recipes_ingredients = RecipesIngredients.objects.filter(
+            recipe__in=shopping_cart.values_list('pk')
+        )
         for recipe_ingredient in recipes_ingredients:
             ingredient_name = (
                 f"{recipe_ingredient.ingredient.name} "
@@ -351,6 +370,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 shopping_list[ingredient_name] += amount
             else:
                 shopping_list[ingredient_name] = amount
+        
+        
         content = (
             f"{user.username}, Ваш список покупок на {current_date}\n\n\n"
         )
@@ -363,6 +384,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
         return response
+        """
 
 
 
