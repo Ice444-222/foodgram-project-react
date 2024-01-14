@@ -234,7 +234,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def cart_favorite_method(self, request, pk):
         user = request.user
         try:
-            recipe = self.get_object()
+            recipe = Recipe.objects.get(pk=pk)
         except Http404:
             raise ValidationError
         relation = user.groceries_list.filter(pk=recipe.pk)
@@ -264,12 +264,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=True, methods=['POST'],
         permission_classes=(IsAuthenticated,)
     )
-    def shopping_cart(self, request, pk=None):
+    def shopping_cart(self, request, *args, **kwargs):
         user = request.user
+        pk = kwargs.get('pk')
         return self.cart_favorite_method(request, pk)
         
     @shopping_cart.mapping.delete
-    def delete_shopping_cart(self, request, pk=None):
+    def delete_shopping_cart(self, request, pk):
         try: 
             recipe = self.get_object() 
         except Http404:
