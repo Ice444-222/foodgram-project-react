@@ -143,46 +143,38 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class SubscribeUserAPIView(APIView):
     permission_classes = (IsAuthenticated,)
-
     def post(self, request, pk=None):
         user = request.user
         subscription = get_object_or_404(User, pk=pk)
         user_subscriptions = Subscription.objects.filter(
             user=user, subscription=subscription
         )
-
         if user == subscription:
             return Response(
                 {"detail": 'Вы не можете подписаться на самого себя.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         if user_subscriptions.exists():
             return Response(
                 {"detail": 'Вы уже подписаны на данного пользователя'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         Subscription.objects.create(
             user=request.user, subscription=subscription
         )
-
         serializer = UserSubscriptionsSerializer(
             subscription, context={'request': request},
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
     def delete(self, request, pk=None):
         user = request.user
         subscription = get_object_or_404(User, pk=pk)
         user_subscriptions = Subscription.objects.filter(
             user=user, subscription=subscription
         )
-
         if user_subscriptions.exists():
             user_subscriptions.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
         return Response(
             {"detail": 'Вы не подписаны на этого пользователя'},
             status=status.HTTP_400_BAD_REQUEST
@@ -192,9 +184,8 @@ class SubscribeUserAPIView(APIView):
 
 class TokenLogoutView(APIView):
     permission_classes = (IsAuthenticated,)
-
+    
     def post(self, request, *args, **kwargs):
-
         try:
             access_token = request.auth
             refresh_token = request.data.get('refresh_token')
@@ -241,50 +232,41 @@ class RecipeViewSet(viewsets.ModelViewSet):
         print(queryset.query)
         return queryset
 
-    def cart_favorite_method(self, request, table):
+    def cart_favorite_method(self, request, table, pk=None):
         try:
             recipe = self.get_object()
         except Http404:
-            if request.method == 'POST':
-                raise ValidationError
-            raise Http404
+            raise ValidationError
         relation = table.filter(pk=recipe.pk)
-        if request.method == 'POST':
-            if relation.exists():
-                return Response(
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            table.add(recipe)
-            serializer = RecipeBriefSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if relation.exists():
-                table.remove(recipe)
-                return Response(status=status.HTTP_204_NO_CONTENT)
+        if relation.exists():
             return Response(
                 status=status.HTTP_400_BAD_REQUEST
             )
+        table.add(recipe)
+        serializer = RecipeBriefSerializer(recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+        
+    def cart_favorite_method_delete(self, request, table, pk=None):
+        try:
+            recipe = self.get_object()
+        except Http404:
+            raise Http404
+        relation = table.filter(pk=recipe.pk)
+        if relation.exists():
+            table.remove(recipe)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
     @action(
         detail=True, methods=['POST'],
         permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, pk=None):
-        try: 
-            recipe = self.get_object() 
-        except Http404: 
-            raise ValidationError(detail="Данный рецепт не существует") 
-        user = request.user 
-        groceries_relation = user.groceries_list.filter(pk=recipe.pk) 
-        if groceries_relation.exists(): 
-            return Response( 
-                {"detail": 'У вас уже есть этот рецепт в корзине'}, 
-                status=status.HTTP_400_BAD_REQUEST 
-            ) 
-        user.groceries_list.add(recipe) 
-        serializer = RecipeBriefSerializer(recipe) 
-        return Response(serializer.data, status=status.HTTP_201_CREATED) 
-
+        user = request.user
+        return self.cart_favorite_method(request, user.groceries_list, pk)
         
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
