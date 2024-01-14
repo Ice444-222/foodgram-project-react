@@ -339,9 +339,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe__in=recipe_ids
         )
         current_date = datetime.now().strftime("%Y-%m-%d")
-        filename = f"{user.username}_shopping_list_{current_date}.txt"
         shopping_list = {}
-
         for recipe_ingredient in recipes_ingredients:
             ingredient_name = (
                 f"{recipe_ingredient.ingredient.name} "
@@ -353,25 +351,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 shopping_list[ingredient_name] += amount
             else:
                 shopping_list[ingredient_name] = amount
-
-        with open(filename, 'w', encoding='utf-8') as file:
-            file.write(
-                f"{user.username}, Ваш список покупок на {current_date}\n\n\n"
-            )
-            for ingredient, amount in shopping_list.items():
-                file.write(f"{ingredient} — {amount}\n")
-            file.write(
-                '\n\n\nСформировано на сайте '
-                'www.iceadmin.ru, Foodgram project'
-            )
-        with open(filename, 'r', encoding='utf-8') as file:
-            file_content = file.read()
-        response = HttpResponse(file_content, content_type='text/plain')
-        response['Content-Disposition'] = (
-            f'attachment; filename="{os.path.basename(filename)}"'
+        content = (
+            f"{user.username}, Ваш список покупок на {current_date}\n\n\n"
         )
+        for ingredient, amount in shopping_list.items():
+            content += f"{ingredient} — {amount}\n"
+        content += (
+            '\n\n\nСформировано на сайте '
+            'www.iceadmin.ru, проект Foodgram'
+        )
+        response = HttpResponse(content, content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
         return response
-
 
 
 
