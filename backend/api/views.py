@@ -336,8 +336,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request, *args, **kwargs):
         user = request.user
         current_date = datetime.now().strftime("%Y-%m-%d")
-        shopping_list = {}
-        
         user_ingredients = (
             RecipesIngredients.objects
             .filter(recipe__groceries_list=user)
@@ -348,6 +346,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             .annotate(
                 total_amount=Coalesce(Sum('amount'), Value(0)),
             )
+        )
+        content = (
+            f"{user.username}, Ваш список покупок на {current_date}\n\n\n"
+        )
+        for ingredient in user_ingredients:
+            content += f"{ingredient['ingredient_name']} {ingredient['measurement_unit']} — {ingredient['total_amount']}\n"
+        content += (
+            '\n\n\nСформировано на сайте '
+            'www.iceadmin.ru, проект Foodgram'
         )
         content = user_ingredients
         response = HttpResponse(content, content_type='text/plain')
