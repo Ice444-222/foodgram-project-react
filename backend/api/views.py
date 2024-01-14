@@ -25,7 +25,7 @@ from .serializers import (IngredientSerializer, RecipeBriefSerializer,
                           UserSubscriptionsSerializer)
 from .pagination import UserPageNumberPagination
 from django.db.models.functions import Coalesce
-
+from django.shortcuts import get_object_or_404
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -139,50 +139,14 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         return paginator.get_paginated_response(serializer.data)
 
-    @action(
-        detail=True, methods=['POST', 'DELETE'],
-        permission_classes=(IsAuthenticated,)
-    )
-    def subscribe(self, request, pk=None):
-        user = request.user
-        subscription = self.get_object()
-        user_subscriptions = Subscription.objects.filter(
-            user=user, subscription=subscription
-        )
-        if request.method == 'POST':
-            if user == subscription:
-                return Response(
-                    {"detail": 'Вы не можете подписаться на самого себя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            if user_subscriptions.exists():
-                return Response(
-                    {"detail": 'Вы уже подписаны на данного пользователя'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            Subscription.objects.create(
-                user=request.user, subscription=subscription
-            )
-            serializer = UserSubscriptionsSerializer(
-                subscription,
-                context={'request': request},
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            if user_subscriptions.exists():
-                user_subscriptions.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                {"detail": 'Вы не подписаны на этого пользователя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
-"""class SubscribeUserAPIView(APIView):
+
+class SubscribeUserAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk=None):
         user = request.user
-        subscription = self.get_object()
+        subscription = get_object_or_404(User, pk=pk)
         user_subscriptions = Subscription.objects.filter(
             user=user, subscription=subscription
         )
@@ -222,7 +186,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(
             {"detail": 'Вы не подписаны на этого пользователя'},
             status=status.HTTP_400_BAD_REQUEST
-        )"""
+        )
 
 
 
