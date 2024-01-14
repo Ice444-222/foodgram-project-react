@@ -229,16 +229,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 output_field=BooleanField()
             )
         ).prefetch_related('tags', 'ingredients').select_related('author')
-        print(queryset.query)
         return queryset
 
-    def cart_favorite_method(self, request, table, pk=None):
+    def cart_favorite_method(self, request, pk):
         user = request.user
         try:
             recipe = self.get_object()
         except Http404:
             raise ValidationError
-        relation = table.filter(pk=recipe.pk)
+        relation = user.groceries_list.filter(pk=recipe.pk)
         if relation.exists():
             return Response(
                 status=status.HTTP_400_BAD_REQUEST
@@ -267,7 +266,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         user = request.user
-        return self.cart_favorite_method(self, request, pk)
+        return self.cart_favorite_method(request, pk)
         
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
