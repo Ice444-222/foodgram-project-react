@@ -231,8 +231,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).prefetch_related('tags', 'ingredients').select_related('author')
         return queryset
 
-    def cart_favorite_method(self, request, pk):
-        user = request.user
+    def cart_favorite_method(self, request, pk, user):
         try:
             recipe = Recipe.objects.get(pk=pk)
         except Http404:
@@ -267,7 +266,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, *args, **kwargs):
         user = request.user
         pk = kwargs.get('pk')
-        return self.cart_favorite_method(request, pk)
+        return self.cart_favorite_method(request, pk, user)
         
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
