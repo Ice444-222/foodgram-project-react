@@ -252,35 +252,41 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
     @action(
-        detail=True, methods=['POST', 'DELETE'],
+        detail=True, methods=['POST'],
         permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, pk=None):
         try: 
             recipe = self.get_object() 
         except Http404: 
-            if request.method == 'POST': 
-                raise ValidationError(detail="Данный рецепт не существует") 
-            raise Http404 
+            raise ValidationError(detail="Данный рецепт не существует") 
         user = request.user 
         groceries_relation = user.groceries_list.filter(pk=recipe.pk) 
-        if request.method == 'POST': 
-            if groceries_relation.exists(): 
-                return Response( 
-                    {"detail": 'У вас уже есть этот рецепт в корзине'}, 
-                    status=status.HTTP_400_BAD_REQUEST 
-                ) 
-            user.groceries_list.add(recipe) 
-            serializer = RecipeBriefSerializer(recipe) 
-            return Response(serializer.data, status=status.HTTP_201_CREATED) 
-        if request.method == 'DELETE': 
-            if groceries_relation.exists(): 
-                user.groceries_list.remove(recipe) 
-                return Response(status=status.HTTP_204_NO_CONTENT) 
+        if groceries_relation.exists(): 
             return Response( 
-                {"detail": 'У вас нету этого рецепта в корзине'}, 
+                {"detail": 'У вас уже есть этот рецепт в корзине'}, 
                 status=status.HTTP_400_BAD_REQUEST 
             ) 
+        user.groceries_list.add(recipe) 
+        serializer = RecipeBriefSerializer(recipe) 
+        return Response(serializer.data, status=status.HTTP_201_CREATED) 
+
+        
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk=None):
+        try: 
+            recipe = self.get_object() 
+        except Http404:
+            raise Http404
+        user = request.user 
+        groceries_relation = user.groceries_list.filter(pk=recipe.pk)
+        if groceries_relation.exists(): 
+            user.groceries_list.remove(recipe) 
+            return Response(status=status.HTTP_204_NO_CONTENT) 
+        return Response( 
+                {"detail": 'У вас нету этого рецепта в корзине'}, 
+                status=status.HTTP_400_BAD_REQUEST 
+            )
 
     @action(
         detail=True, methods=['POST', 'DELETE'],
