@@ -15,7 +15,6 @@ router.register("ingredients", IngredientViewSet, basename="ingredients")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("users/<int:pk>/subscribe/", SubscribeUserAPIView.as_view(), name='subscribe'),
     path(
         "auth/token/login/", CustomTokenObtainPairView.as_view(),
         name="token_obtain_pair",
