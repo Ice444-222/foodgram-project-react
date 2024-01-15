@@ -3,10 +3,11 @@ import base64
 from django.contrib.auth import get_user_model
 from django.core.exceptions import BadRequest, ObjectDoesNotExist
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.db.models import F
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from django.db import transaction
+
 from recipes.models import Ingredient, Recipe, RecipesIngredients, Tag
 
 User = get_user_model()
@@ -136,8 +137,6 @@ class RecipesSerializer(serializers.ModelSerializer):
                   "is_favorited", "is_in_shopping_cart",
                   "name", "image", "text", "cooking_time"]
 
-    
-    
     def get_ingredients(self, obj):
         recipe = obj
         ingredients = recipe.ingredients.values(
@@ -168,9 +167,9 @@ class RecipesSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Необходимо добавить теги.')
         unique_tags = set(tags)
-        if len(unique_tags) < len (tags):
-            raise serializers.ValidationError( 
-            f'В списке есть теги дубликаты.' 
+        if len(unique_tags) < len(tags):
+            raise serializers.ValidationError(
+                'В списке есть теги дубликаты.'
             )
         for tag in tags:
             try:

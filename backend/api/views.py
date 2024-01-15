@@ -1,12 +1,13 @@
-import os
 from datetime import datetime
 
-from django.db.models import Case, When, BooleanField, Value, F, Sum, Count
-from django.http import Http404, HttpResponse, JsonResponse
+from django.db.models import BooleanField, Case, F, Sum, Value, When
+from django.db.models.functions import Coalesce
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ParseError, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,15 +18,21 @@ from recipes.models import Ingredient, Recipe, RecipesIngredients, Tag
 from users.models import Subscription, User
 
 from .filters import IngredientFilter, RecipeFilter
-from .permissions import IsAdminOrReadOnly, SafeMethodOrAuthor, IsAdmin
+from .pagination import UserPageNumberPagination
+from .permissions import IsAdmin, IsAdminOrReadOnly, SafeMethodOrAuthor
 from .serializers import (IngredientSerializer, RecipeBriefSerializer,
                           RecipesSerializer, TagSerializer,
                           UserBasicSerializer, UserCreateSerializer,
                           UserNewPasswordSerializer,
                           UserSubscriptionsSerializer)
-from .pagination import UserPageNumberPagination
-from django.db.models.functions import Coalesce
-from django.shortcuts import get_object_or_404
+
+"""
+"По ТЗ страница любого пользователя должна быть доступна для любого
+пользователя (в том числе без авторизации). Сейчас редиректит на логин
+(например, https://iceadmin.ru/user/2)."
+Наш наставник Михаил Землянухин сообщил что это баг фронта, говорит
+ещё не исправили. У ребят с моей когорты такая же проблема с редиректом.
+"""
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -140,9 +147,9 @@ class UserViewSet(viewsets.ModelViewSet):
         return paginator.get_paginated_response(serializer.data)
 
 
-
 class SubscribeUserAPIView(APIView):
     permission_classes = (IsAuthenticated,)
+
     def post(self, request, pk=None):
         user = request.user
         subscription = get_object_or_404(User, pk=pk)
@@ -166,6 +173,7 @@ class SubscribeUserAPIView(APIView):
             subscription, context={'request': request},
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     def delete(self, request, pk=None):
         user = request.user
         subscription = get_object_or_404(User, pk=pk)
@@ -181,10 +189,9 @@ class SubscribeUserAPIView(APIView):
         )
 
 
-
 class TokenLogoutView(APIView):
     permission_classes = (IsAuthenticated,)
-    
+
     def post(self, request, *args, **kwargs):
         try:
             access_token = request.auth
@@ -245,7 +252,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = RecipeBriefSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        
     def cart_favorite_method_delete(self, pk, table):
         recipe = get_object_or_404(Recipe, pk=pk)
         relation = table.filter(pk=recipe.pk)
@@ -255,7 +261,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     @action(
         detail=True, methods=['POST'],
         permission_classes=(IsAuthenticated,)
@@ -264,7 +270,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         pk = kwargs.get('pk')
         return self.cart_favorite_method(pk, user.groceries_list)
-        
+
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, *args, **kwargs):
         user = request.user
@@ -280,13 +286,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         pk = kwargs.get('pk')
         return self.cart_favorite_method(pk, user.favorites)
 
-    
     @favorite.mapping.delete
     def delete_favorite(self, request, *args, **kwargs):
         user = request.user
         pk = kwargs.get('pk')
         return self.cart_favorite_method_delete(pk, user.favorites)
-    
+
     @action(
         detail=False, methods=['GET'],
         permission_classes=(IsAuthenticated,)
@@ -309,16 +314,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
             f"{user.username}, Ваш список покупок на {current_date}\n\n\n"
         )
         for ingredient in user_ingredients:
-            content += f"{ingredient['ingredient_name']} ({ingredient['measurement_unit']}) — {ingredient['total_amount']}\n"
+            content += (
+                f"{ingredient['ingredient_name']}"
+                f"({ingredient['measurement_unit']}) — "
+                f"{ingredient['total_amount']}\n"
+            )
         content += (
             '\n\n\nСформировано на сайте '
             'www.iceadmin.ru, проект Foodgram'
         )
         response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_list.txt"'
+        )
         return response
-
-
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):

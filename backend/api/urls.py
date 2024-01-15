@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from users.views import CustomTokenObtainPairView
 
-from .views import (IngredientViewSet, RecipeViewSet, TagViewSet,
-                    TokenLogoutView, UserViewSet, SubscribeUserAPIView)
+from .views import (IngredientViewSet, RecipeViewSet, SubscribeUserAPIView,
+                    TagViewSet, TokenLogoutView, UserViewSet)
 
 router = DefaultRouter()
 router.register("users", UserViewSet, basename="users")
@@ -15,7 +15,10 @@ router.register("ingredients", IngredientViewSet, basename="ingredients")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("users/<int:pk>/subscribe/", SubscribeUserAPIView.as_view(), name="subscribe"),
+    path(
+        "users/<int:pk>/subscribe/",
+        SubscribeUserAPIView.as_view(), name="subscribe"
+    ),
     path(
         "auth/token/login/", CustomTokenObtainPairView.as_view(),
         name="token_obtain_pair",
