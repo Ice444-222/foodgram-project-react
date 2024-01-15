@@ -231,7 +231,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).prefetch_related('tags', 'ingredients').select_related('author')
         return queryset
 
-    def cart_favorite_method(self, request, pk, user, table):
+    def cart_favorite_method(self, pk, table):
         try:
             recipe = Recipe.objects.get(pk=pk)
         except Http404:
@@ -246,11 +246,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         
-    def cart_favorite_method_delete(self, request, pk, user, table):
-        try:
-            recipe = Recipe.objects.get(pk=pk)
-        except Http404:
-            raise Http404
+    def cart_favorite_method_delete(self, pk, table):
+        recipe = get_object_or_404(Recipe, pk=pk)
         relation = table.filter(pk=recipe.pk)
         if relation.exists():
             table.remove(recipe)
@@ -266,13 +263,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, *args, **kwargs):
         user = request.user
         pk = kwargs.get('pk')
-        return self.cart_favorite_method(request, pk, user, user.groceries_list)
+        return self.cart_favorite_method(pk, user.groceries_list)
         
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, *args, **kwargs):
         user = request.user
         pk = kwargs.get('pk')
-        return self.cart_favorite_method_delete(request, pk, user, user.groceries_list)
+        return self.cart_favorite_method_delete(pk, user.groceries_list)
 
 
     @action(
