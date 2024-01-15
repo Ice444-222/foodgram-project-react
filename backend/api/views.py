@@ -271,45 +271,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
         pk = kwargs.get('pk')
         return self.cart_favorite_method_delete(pk, user.groceries_list)
 
-
     @action(
         detail=True, methods=['POST'],
         permission_classes=(IsAuthenticated,)
     )
-    def favorite(self, request, pk=None):
+    def favorite(self, request, *args, **kwargs):
         user = request.user
-        try:
-            recipe = self.get_object()
-        except Http404:
-            raise ParseError(
-                detail="Данный рецепт не существует"
-            )
-        favorites_user = user.favorites.filter(pk=recipe.pk)
-        if favorites_user.exists():
-            return Response(
-                {"detail": 'У вас уже есть этот рецепт в избранном'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        user.favorites.add(recipe)
-        serializer = RecipeBriefSerializer(recipe)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        pk = kwargs.get('pk')
+        return self.cart_favorite_method(pk, user.favorites)
 
     
     @favorite.mapping.delete
-    def delete_favorite(self, request, pk=None):
+    def delete_favorite(self, request, *args, **kwargs):
         user = request.user
-        try:
-            recipe = self.get_object()
-        except Http404:
-            raise Http404
-        favorites_user = user.favorites.filter(pk=recipe.pk)
-        if favorites_user.exists():
-            user.favorites.remove(recipe)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {"detail": 'У вас нету этого рецепта в избранном'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        pk = kwargs.get('pk')
+        return self.cart_favorite_method_delete(pk, user.favorites)
     
     @action(
         detail=False, methods=['GET'],
