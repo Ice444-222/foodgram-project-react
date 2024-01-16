@@ -32,15 +32,5 @@ class RecipeFilter(FilterSet):
             'author', 'tags__slug', 'is_favorited', 'is_in_shopping_cart'
         )
 
-    def filter_is_favorited(self, queryset, name, value):
-        if value:
-            return queryset.filter(is_favorited=True)
-        return queryset
-
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        if value:
-            return queryset.filter(is_in_shopping_cart=True)
-        return queryset
-
     def filter_tags(self, queryset, name, value):
         return queryset.filter(tags__slug__in=value)
