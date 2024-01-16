@@ -26,14 +26,6 @@ from .serializers import (IngredientSerializer, RecipeBriefSerializer,
                           UserNewPasswordSerializer,
                           UserSubscriptionsSerializer)
 
-"""
-"По ТЗ страница любого пользователя должна быть доступна для любого
-пользователя (в том числе без авторизации). Сейчас редиректит на логин
-(например, https://iceadmin.ru/user/2)."
-Наш наставник Михаил Землянухин сообщил что это баг фронта, говорит что
-ещё не исправили. У ребят с моей когорты такая же проблема с редиректом.
-"""
-
 
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.AllowAny,)
