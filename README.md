@@ -4,7 +4,7 @@ Working project on the domain:
 ```
 iceadmin.ru
 ```
-
+Currently, only russian language is supported. 
 The Foodgram project is a web application implemented with React and Django. 
 The Foodgram product assistant is created to allow users to publish their recipes,
 subscribe to other authors, add recipes to favorites, and create a shopping
