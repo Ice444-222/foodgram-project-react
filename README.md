@@ -1,4 +1,5 @@
 # Проект Foodgram продуктовый помощник
+iceadmin.ru
 
 
 Проект Foodgram это WEB приложение реализованное на React и Django.
@@ -19,7 +20,7 @@
 Клонировать репозиторий и перейти в него в командной строке: 
 
 ```
-git clone git@github.com:Ice444-222/foodgram-project-react.git 
+git clone git@github.com:Ice444-222/grocery_assistant_django.git 
 ```
 
 ``` 
