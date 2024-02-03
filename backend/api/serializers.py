@@ -16,6 +16,10 @@ MAX_RECIPES_PER_PAGE = 6
 
 
 class UserBasicSerializer(serializers.ModelSerializer):
+    """
+    Базовый сериализатор для модели User.
+    """
+
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -40,6 +44,10 @@ class UserBasicSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания модели User.
+    """
+
     class Meta:
         model = User
         fields = [
@@ -56,6 +64,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserNewPasswordSerializer(serializers.Serializer):
+    """
+    Сериализатор для обновления пароля для модели User.
+    Происходит валидация что пользователь ввёл свой старый пароль верно.
+    """
+
     current_password = serializers.CharField(write_only=True, required=True)
     new_password = serializers.CharField(write_only=True, required=True)
 
@@ -76,6 +89,10 @@ class UserNewPasswordSerializer(serializers.Serializer):
 
 
 class Base64ImageField(serializers.ImageField):
+    """
+    Сериализатор для конверции изображений в кодировку Base64.
+    """
+
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
@@ -85,6 +102,10 @@ class Base64ImageField(serializers.ImageField):
 
 
 class CustomTokenObtainPairSerializer(serializers.Serializer):
+    """
+    Сериализатор для конверции изображений в кодировку Base64.
+    """
+
     password = serializers.CharField(write_only=True)
     email = serializers.CharField(write_only=True)
 
@@ -106,6 +127,9 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Tag.
+    """
 
     class Meta:
         model = Tag
@@ -113,6 +137,10 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipesIngredientsSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для связанной таблицы M:M RecipesIngredients.
+    """
+
     id = serializers.IntegerField()
     name = serializers.CharField(read_only=True)
     measurement_unit = serializers.CharField(read_only=True)
@@ -124,6 +152,12 @@ class RecipesIngredientsSerializer(serializers.ModelSerializer):
 
 
 class RecipesSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Recipe. Сериализатор написан под нестандартный
+    запрос JSON. В методах вручную вытаскиваются ingredients и tags, для
+    дальнейшей валидации, и действий с базой данных.
+    """
+
     author = UserBasicSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(read_only=True, many=True)
@@ -138,6 +172,13 @@ class RecipesSerializer(serializers.ModelSerializer):
                   "name", "image", "text", "cooking_time"]
 
     def get_ingredients(self, obj):
+        """
+        Этот метод получает все ингредиенты которые относятся к рецептам с
+        посмощью связанной таблицы. Amount не относится к полям модели
+        Ingredient, а к связанной таблице. Поэтому мы реферсим amount через
+        recipe__amount.
+        """
+
         recipe = obj
         ingredients = recipe.ingredients.values(
             'id',
@@ -148,6 +189,10 @@ class RecipesSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def recipes_ingredients_tags_create(tags, ingredients, recipe):
+        """
+        Этот метод используется для создания новых рецептов
+        внутри другого метода.
+        """
         with transaction.atomic():
             recipe.tags.set(tags)
             recipe_ingredients = [
@@ -234,18 +279,30 @@ class RecipesSerializer(serializers.ModelSerializer):
 
 
 class RecipeBriefSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для краткого представления рецептов.
+    """
+
     class Meta:
         model = Recipe
         fields = ["id", "name", "image", "cooking_time"]
 
 
 class IngredientSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для ингредиентов.
+    """
+
     class Meta:
         model = Ingredient
         fields = ["id", "name", "measurement_unit"]
 
 
 class UserSubscriptionsSerializer(UserBasicSerializer):
+    """
+    Сериализатор для подписок модели User.
+    """
+
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 

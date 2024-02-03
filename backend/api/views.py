@@ -28,12 +28,20 @@ from .serializers import (IngredientSerializer, RecipeBriefSerializer,
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    Вьюсет для модели User.
+    """
+
     permission_classes = (permissions.AllowAny,)
     queryset = User.objects.all()
     http_method_names = ['get', 'post', 'put', 'delete']
     pagination_class = UserPageNumberPagination
 
     def get_serializer_class(self):
+        """
+        Функция вызывает сериализатор на основне вида метода.
+        """
+
         if self.action == 'create':
             return UserCreateSerializer
         return UserBasicSerializer
@@ -63,6 +71,10 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,), url_path='me'
     )
     def me(self, request, *args, **kwargs):
+        """
+        Эндпоинт me для модели User. Показывает текущего пользователя.
+        """
+
         user = request.user
         serializer = UserBasicSerializer(
             user,
@@ -78,6 +90,10 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def set_password(self, request, *args, **kwargs):
+        """
+        Эндпоинт set_password для нового пароля пользователя.
+        """
+
         serializer = UserNewPasswordSerializer(
             data=request.data, context={'request': request}
         )
@@ -90,6 +106,10 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAdmin,)
     )
     def edit_user(self, request, pk=None):
+        """
+        Эндпоинт edit_user для редактирования пользователя.
+        """
+
         user = self.get_object()
         serializer = UserBasicSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
@@ -102,6 +122,10 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAdmin,)
     )
     def delete_user(self, request, pk=None):
+        """
+        Эндпоинт delete_user для удаления пользователя.
+        """
+
         user = self.get_object()
         user.delete()
         return Response(
@@ -114,6 +138,10 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAdmin,)
     )
     def block_user(self, request, pk=None):
+        """
+        Эндпоинт block_user для блокировки пользователя.
+        """
+
         user = self.get_object()
         user.is_active = False
         user.save()
@@ -126,6 +154,10 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def subscriptions(self, request, *args, **kwargs):
+        """
+        Эндпоинт subscriptions для просмотра подписок текущего пользователя.
+        """
+
         user = request.user
         user_subscriptions = User.objects.filter(subscribers__user=user)
         paginator = self.pagination_class()
@@ -140,6 +172,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class SubscribeUserAPIView(APIView):
+    """
+    Вью для создания и удаления подписок текущего пользователя.
+    """
+
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, pk=None):
@@ -182,6 +218,10 @@ class SubscribeUserAPIView(APIView):
 
 
 class TokenLogoutView(APIView):
+    """
+    Вью для логаута и последующего удаления токена текущего пользователя.
+    """
+
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
@@ -201,6 +241,10 @@ class TokenLogoutView(APIView):
 
 
 class TagViewSet(viewsets.ModelViewSet):
+    """
+    Вьюсет для модели Tag.
+    """
+
     permission_classes = (IsAdminOrReadOnly,)
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -208,6 +252,10 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    """
+    Вьюсет для модели Recipe.
+    """
+
     permission_classes = (SafeMethodOrAuthor | IsAdminOrReadOnly,)
     serializer_class = RecipesSerializer
     pagination_class = UserPageNumberPagination
@@ -215,6 +263,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     def get_queryset(self):
+        """
+        Дополнительно аннотируем к queryset поля is_favorited и
+        is_in_shopping_cart, которые нужны будут для других методов и функций.
+        Также фэтчим и селектим tags, ingredients, author для оптимизации
+        SQL запросов к базе данных.
+        """
         user = self.request.user
         queryset = Recipe.objects.annotate(
             is_favorited=Case(
@@ -231,6 +285,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return queryset
 
     def cart_favorite_method(self, pk, table):
+        """
+        Функция для сокращения однотипного кода для эндпоинта shopping_cart
+        и favorite.
+        """
+        
         try:
             recipe = Recipe.objects.get(pk=pk)
         except Http404:
@@ -245,6 +304,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def cart_favorite_method_delete(self, pk, table):
+        """
+        Функция для сокращения однотипного кода для эндпоинта shopping_cart
+        и favorite где применён метод DELETE.
+        """
+
         recipe = get_object_or_404(Recipe, pk=pk)
         relation = table.filter(pk=recipe.pk)
         if relation.exists():
@@ -259,12 +323,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def shopping_cart(self, request, *args, **kwargs):
+        """
+        Эндпоинт shopping_cart, представляет собой корзину пользователя,
+        куда он может добавлять рецепты.
+        """
+
         user = request.user
         pk = kwargs.get('pk')
         return self.cart_favorite_method(pk, user.groceries_list)
 
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, *args, **kwargs):
+        """
+        Метод DELETE для эндпоинта shopping_cart.
+        """
+
         user = request.user
         pk = kwargs.get('pk')
         return self.cart_favorite_method_delete(pk, user.groceries_list)
@@ -274,12 +347,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def favorite(self, request, *args, **kwargs):
+        """
+        Эндпоинт favorite, представляет собой список избранного пользователя,
+        куда он может добавлять рецепты.
+        """
+
         user = request.user
         pk = kwargs.get('pk')
         return self.cart_favorite_method(pk, user.favorites)
 
     @favorite.mapping.delete
     def delete_favorite(self, request, *args, **kwargs):
+        """
+        Метод DELETE для эндпоинта favorite.
+        """
+
         user = request.user
         pk = kwargs.get('pk')
         return self.cart_favorite_method_delete(pk, user.favorites)
@@ -289,6 +371,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request, *args, **kwargs):
+        """
+        Эндпоинт download_shopping_cart, позволяет скачивать список
+        ингредиентов для покупки в формате .txt на основе
+        рецептов в корзине пользователя.
+        """
+
         user = request.user
         current_date = datetime.now().strftime("%Y-%m-%d")
         user_ingredients = (
@@ -323,6 +411,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Вьюсет для ингредиентов.
+    """
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (IsAdminOrReadOnly,)

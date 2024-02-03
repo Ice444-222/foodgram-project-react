@@ -4,11 +4,21 @@ from rest_framework.exceptions import (AuthenticationFailed, MethodNotAllowed,
 
 
 class IsAdmin(permissions.BasePermission):
+    """
+    Стандартный класс пермишена, который проверяет является
+    ли автор запроса админом.
+    """
+
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_admin_or_staff
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
+    """
+    Класс пермишена, который проверяет является ли пользователь запроса
+    админом, если используется не безопасный метод запроса.
+    """
+
     def has_permission(self, request, view):
         if (
             request.method not in permissions.SAFE_METHODS
@@ -19,6 +29,11 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 
 class SafeMethodOrAuthor(permissions.BasePermission):
+    """
+    Класс пермишена, который проверяет является ли пользователь запроса автором
+    объекта, если используется не безопасный метод запроса.
+    """
+
     def has_permission(self, request, view):
         if (
             request.method not in permissions.SAFE_METHODS and not
@@ -36,6 +51,12 @@ class SafeMethodOrAuthor(permissions.BasePermission):
 
 
 class IsAuthorOrAdminOrModeratorOrReadOnly(permissions.BasePermission):
+    """
+    Класс пермишена, который проверяет является ли пользователь запроса
+    автором объекта или админом/стаффом, если используется
+    не безопасный метод запроса.
+    """
+
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS

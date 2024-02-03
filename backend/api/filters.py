@@ -6,6 +6,11 @@ from recipes.models import Ingredient, Recipe, Tag
 
 
 class IngredientFilter(FilterSet):
+    """
+    Фильтр унаследованный от фильтрсета для ингредиентов, который позволяет
+    искать ингредиент по имени.
+    """
+
     name = CharFilter(
         field_name='name',
         lookup_expr='istartswith',
@@ -17,6 +22,12 @@ class IngredientFilter(FilterSet):
 
 
 class RecipeFilter(FilterSet):
+    """
+    Фильтр унаследованный от фильтрсета для рецептов, который позволяет
+    искать рецепты по автору, тегам и boolean значениям аннотированного
+    queryset'а рецептов.
+    """
+
     author = CharFilter(field_name='author__id', lookup_expr='iexact')
     tags = ModelMultipleChoiceFilter(
         field_name='tags__slug',
