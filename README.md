@@ -17,6 +17,16 @@ iceadmin.ru
 образов по docker-compose, которые в дальнейшем пушатся на dockerhub. 
 При успешном выполнении actions прходит сообщение на Telegram от бота.
 
+##Стек технологий
+
+```
+Python 3.9.10
+Django 3.2.16
+gunicorn 20.1.0
+djoser 2.1.0
+nginx 1.19.3
+postgres 12.4
+```
 
 ## Как запустить проект: 
 
