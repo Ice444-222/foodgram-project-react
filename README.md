@@ -1,23 +1,24 @@
-# Проект Foodgram продуктовый помощник
+# Foodgram Product Assistant Project
 
-Рабочий проект на домене:
+Working project on the domain:
 ```
 iceadmin.ru
 ```
 
-Проект Foodgram это WEB приложение реализованное на React и Django.
-Продуктовый помошник Foodgram создан с целью предоставить пользователям возможность
-публиковать свои рецепты, подписываться на других авторов, добавлять рецепты в избранное,
-составлять список продуктовой корзины на основе рецептов в корзине. На сайте реализована
-регистрация, авторизация на основе токенов, панель админинстратора, api запросы, фильтрация
-выдачи. Присутствует CI/CD через Git workflow и Docker. Приложение Foodgram работает на удалённом сервере. 
-Приложение Foodgram делится на контейнеры: Frontend, Backend, Gateway, Db.
-При пуше на ветку main, стартует инструкция workflow которую исполняет git actions. 
-Запускаются независымые раннеры, которые проверяют код по flake8, идёт сборка 
-образов по docker-compose, которые в дальнейшем пушатся на dockerhub. 
-При успешном выполнении actions прходит сообщение на Telegram от бота.
+The Foodgram project is a web application implemented with React and Django. 
+The Foodgram product assistant is created to allow users to publish their recipes,
+subscribe to other authors, add recipes to favorites, and create a shopping
+list based on the recipes in the cart. The site includes registration,
+token-based authorization, an administrator panel, API requests,
+and result filtering. It also has CI/CD through Git workflow and Docker.
+The Foodgram application is hosted on a remote server. The application is
+divided into containers: Frontend, Backend, Gateway, and Db. Upon pushing
+to the main branch, a workflow instruction is triggered by Git actions.
+Independent runners check the code using flake8, build images using
+docker-compose, and push them to dockerhub. Upon successful completion of
+actions, a message is sent to Telegram from a bot.
 
-## Стек технологий:
+## Technology Stack:
 
 ```
 Python 3.9.10
@@ -28,9 +29,9 @@ nginx 1.19.3
 postgres 12.4
 ```
 
-## Как запустить проект: 
+## How to Run the Project: 
 
-Клонировать репозиторий и перейти в него в командной строке: 
+Clone the repository and navigate to it in the command line: 
 
 ```
 git clone git@github.com:Ice444-222/grocery_assistant_django.git 
@@ -40,50 +41,49 @@ git clone git@github.com:Ice444-222/grocery_assistant_django.git
 cd foodgram-project-react
 ```
 
-Сделать пуш в ветку main:
+Push to the main branch:
 
 ``` 
 git push
 ```
 
-Подключиться к удалённому серверу и наполнить базу исходными данными:
+Connect to the remote server and populate the database with initial data:
 
 ``` 
 sudo docker compose -f docker-compose.yml exec backend python manage.py load_csv dbdata/ingredients.csv
 ```
-Данные для панели админинстратора:
+Admin panel login details:
 ```
-логин: ice
-пароль: ice
+Username: ice
+Password: ice
 ```
-Через панель админинстратора создать объекты модели Tag
+Create Tag model objects through the admin panel.
 
 
-## Примеры запросов к приложению
+## Examples of Requests to the Application
 
-### Запрос к главной странице
+### Request to the Home Page
 
-Запрос к главной странице перенаправит на страницу
-аутентификация если пользователь не зашёл в свой аккаунт.
-Если пользователь уже аутентифицирован, то откроется
-страница со всеми рецептами.
+A request to the home page will redirect to the authentication page if
+the user is not logged in. If the user is already authenticated,
+the page with all recipes will open.
 
 ```
 https://iceadmin.ru/
 ```
 
-### Добавление нового рецепта
+### Adding a New Recipe
 
-Чтобы попасть на эту страницу надо быть аунтифицированным.
-Необходимо также загрузить изоброжение рецепта и выбрать ингредиенты
+To access this page, you need to be authenticated.
+You also need to upload an image of the recipe and select ingredients.
 
 ```
 https://iceadmin.ru/recipes/create
 ```
 
-### Редактирование рецепта
+### Editing a Recipe
 
-Редактировать рецепт можно только автор рецепта или админ.
+Only the author of the recipe or an admin can edit a recipe.
 
 ```
 https://iceadmin.ru/recipes/id/edit
@@ -91,5 +91,5 @@ https://iceadmin.ru/recipes/id/edit
 
 
 
-## Состояние рабочего процесса
+## Workflow Status
 ![process](https://github.com/ice444-222/kittygram_final/actions/workflows/main.yml/badge.svg?event=push)
