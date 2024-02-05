@@ -29,7 +29,7 @@ nginx 1.19.3
 postgres 12.4
 ```
 
-## How to Run the Project: 
+## How to Run the Project:
 
 Clone the repository and navigate to it in the command line: 
 
